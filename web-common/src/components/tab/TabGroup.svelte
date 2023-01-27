@@ -9,7 +9,7 @@
   import { tweened } from "svelte/motion";
   import { derived, Readable, writable } from "svelte/store";
 
-  export let variant: "panel" | "secondary" = "panel";
+  export let variant: "panel" | "secondary" | "simple" = "panel";
 
   let container;
 
@@ -62,12 +62,14 @@
 </script>
 
 <div
-  class="flex flex-row gap-x-4 relative items-stretch"
+  class="flex flex-row {variant === 'simple'
+    ? 'gap-x-2'
+    : 'gap-x-4'} relative items-stretch"
   bind:this={container}
   style:height="40px"
 >
   <slot />
-  {#if $selectedValue !== undefined && $tweenedMovingElement?.left !== undefined}
+  {#if variant !== "simple" && $selectedValue !== undefined && $tweenedMovingElement?.left !== undefined}
     <div
       class:opacity-20={variant === "secondary"}
       class="absolute rounded bg-gray-600 z-10 pointer-events-none"

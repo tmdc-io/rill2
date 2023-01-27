@@ -12,6 +12,7 @@
   export let placeholder = "";
   export let hint = "";
   export let claimFocusOnMount = false;
+  export let disabled = false;
 
   let inputElement;
 
@@ -46,6 +47,7 @@
   {placeholder}
   autocomplete="off"
   class="border border-gray-400 rounded px-1 py-2 cursor-pointer focus:outline-blue-500 w-full text-xs"
+  {disabled}
 />
 {#if error}
   <div

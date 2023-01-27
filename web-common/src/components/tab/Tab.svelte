@@ -4,6 +4,7 @@
 
   export let selected = false;
   export let value;
+  export let compact = false;
 
   let element;
 
@@ -25,7 +26,7 @@
   aria-selected={selected}
   style:min-width="40px"
   class:font-bold={element === $selectedValue}
-  class="px-4 pb-0 mb-0"
+  class="{compact ? 'px-2' : 'px-4'} pb-0 mb-0"
   on:click={() => {
     if (!selected) callback(element, value);
   }}
