@@ -11,8 +11,8 @@
     V1ReconcileResponse,
   } from "../../../runtime-client";
   import { fileArtifactsStore } from "../../entity-management/file-artifacts-store";
+  import Spinner from "../../entity-management/Spinner.svelte";
   import { EntityStatus } from "../../entity-management/types";
-  import Spinner from "../../temp/Spinner.svelte";
   import FullPrompt from "./FullPrompt.svelte";
 
   export let modelName: string;
@@ -60,6 +60,7 @@
   const primer = "SELECT";
   $: prompt = schema + "\n#\n" + query + "\n" + primer;
   let isLoading: boolean;
+  let error: string;
 
   const { form, errors, handleSubmit } = createForm({
     initialValues: {
@@ -86,6 +87,12 @@
 
       // Postprocess the response
       const data = await response.json();
+      // if there's an error, show it
+      if (data.error) {
+        error = data.error.message;
+        isLoading = false;
+        return;
+      }
       // add the primer back to the beginning of the response
       sql = primer + data.choices[0].text;
       // stop sql at first semicolon
@@ -150,8 +157,7 @@
       label="Question"
       disabled={isLoading}
     />
-    <div class="m-4" />
-    <div class="flex flex-row gap-x-2">
+    <div class="flex flex-row gap-x-2 my-4">
       <Button type="secondary" on:click={openFullPromptModal}
         >See full prompt</Button
       >
@@ -167,6 +173,9 @@
         </div>
       {/if}
     </div>
+    {#if error}
+      <div class="text-red-500">{error}</div>
+    {/if}
   </form>
 </div>
 
