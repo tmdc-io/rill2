@@ -12,6 +12,7 @@ export type V1RuntimeGetConfig = {
   is_dev: boolean;
   analytics_enabled: boolean;
   readonly: boolean;
+  openai_api_key: string;
 };
 export const runtimeServiceGetConfig =
   async (): Promise<V1RuntimeGetConfig> => {

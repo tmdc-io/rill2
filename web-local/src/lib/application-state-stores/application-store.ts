@@ -8,10 +8,12 @@ import { writable } from "svelte/store";
 export type RuntimeState = {
   instanceId: string;
   readOnly: boolean;
+  openAIAPIKey: string;
 };
 export const runtimeStore = writable<RuntimeState>({
   instanceId: null,
   readOnly: undefined,
+  openAIAPIKey: undefined,
 });
 
 // Store to show application running status based on Query Queue

@@ -17,7 +17,11 @@
 
   export let modelName: string;
 
-  const OPENAI_API_KEY = "YOUR_OPENAI_API_KEY";
+  /**
+   * Hack: currently, we call the OpenAI API client-side, so we need to pass the API key from the backend to the frontend.
+   * TODO: make the OpenAI API calls from the backend.
+   */
+  $: OPENAI_API_KEY = $runtimeStore.openAIAPIKey;
 
   let schema: string;
   const schemaQuery = useRuntimeServiceQuery();

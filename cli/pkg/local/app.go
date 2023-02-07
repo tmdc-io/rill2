@@ -54,14 +54,15 @@ const (
 // Here, a local environment means a non-authenticated, single-instance and single-project setup on localhost.
 // App encapsulates logic shared between different CLI commands, like start, init, build and source.
 type App struct {
-	Context     context.Context
-	Runtime     *runtime.Runtime
-	Instance    *drivers.Instance
-	Logger      *zap.SugaredLogger
-	BaseLogger  *zap.Logger
-	Version     version.Version
-	Verbose     bool
-	ProjectPath string
+	Context      context.Context
+	Runtime      *runtime.Runtime
+	Instance     *drivers.Instance
+	Logger       *zap.SugaredLogger
+	BaseLogger   *zap.Logger
+	Version      version.Version
+	Verbose      bool
+	ProjectPath  string
+	OpenAIAPIKey string
 }
 
 func NewApp(ctx context.Context, ver version.Version, verbose bool, olapDriver, olapDSN, projectPath string, logFormat LogFormat) (*App, error) {
@@ -136,16 +137,19 @@ func NewApp(ctx context.Context, ver version.Version, verbose bool, olapDriver, 
 		return nil, err
 	}
 
+	openAIAPIKey := os.Getenv("OPENAI_API_KEY")
+
 	// Done
 	app := &App{
-		Context:     ctx,
-		Runtime:     rt,
-		Instance:    inst,
-		Logger:      logger.Sugar(),
-		BaseLogger:  logger,
-		Version:     ver,
-		Verbose:     verbose,
-		ProjectPath: projectPath,
+		Context:      ctx,
+		Runtime:      rt,
+		Instance:     inst,
+		Logger:       logger.Sugar(),
+		BaseLogger:   logger,
+		Version:      ver,
+		Verbose:      verbose,
+		ProjectPath:  projectPath,
+		OpenAIAPIKey: openAIAPIKey,
 	}
 	return app, nil
 }
@@ -293,6 +297,7 @@ func (a *App) Serve(httpPort, grpcPort int, enableUI, openBrowser, readonly bool
 		IsDev:            a.Version.IsDev(),
 		AnalyticsEnabled: localConf.AnalyticsEnabled,
 		Readonly:         readonly,
+		OpenAIAPIKey:     a.OpenAIAPIKey,
 	}
 
 	// Create server logger.
@@ -397,6 +402,7 @@ type localInfo struct {
 	IsDev            bool   `json:"is_dev"`
 	AnalyticsEnabled bool   `json:"analytics_enabled"`
 	Readonly         bool   `json:"readonly"`
+	OpenAIAPIKey     string `json:"openai_api_key"`
 }
 
 // infoHandler servers the local info struct.

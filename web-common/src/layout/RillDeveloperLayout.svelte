@@ -33,6 +33,7 @@
     runtimeStore.set({
       instanceId: config.instance_id,
       readOnly: config.readonly,
+      openAIAPIKey: config.openai_api_key,
     });
 
     appBuildMetaStore.set({
