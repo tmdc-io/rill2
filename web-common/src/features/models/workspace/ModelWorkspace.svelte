@@ -48,7 +48,7 @@
               value={"profile"}>Profiler</Tab
             >
             <Tab compact selected={selectedInspectorTab === "gpt"} value={"gpt"}
-              >GPT3</Tab
+              >SQL Assistant</Tab
             >
           </TabGroup>
         </div>

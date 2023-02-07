@@ -144,6 +144,15 @@ body {
 a {
   @apply text-blue-500;
 }
+
+ul {
+  list-style: inside;
+}
+
+li {
+  padding-left: 20px;
+}
+
 .stack-list > * + * {
   margin-top: var(--gap, 1rem);
 }
