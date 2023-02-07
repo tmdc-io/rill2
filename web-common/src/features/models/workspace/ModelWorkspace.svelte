@@ -1,6 +1,7 @@
 <script lang="ts">
   import { EntityType } from "@rilldata/web-common/features/entity-management/types";
   import { appStore } from "@rilldata/web-local/lib/application-state-stores/app-store";
+  import { runtimeStore } from "@rilldata/web-local/lib/application-state-stores/application-store";
   import Tab from "../../../components/tab/Tab.svelte";
   import TabGroup from "../../../components/tab/TabGroup.svelte";
   import { WorkspaceContainer } from "../../../layout/workspace";
@@ -20,6 +21,7 @@
 
   $: switchToModel(modelName);
 
+  $: isGpt3Enabled = $runtimeStore.openAIAPIKey !== "";
   let selectedInspectorTab: "profile" | "gpt" = "profile";
 </script>
 
@@ -32,28 +34,32 @@
       <ModelBody {modelName} {focusEditorOnMount} />
     </div>
     <div slot="inspector">
-      <div class="mx-2">
-        <TabGroup
-          variant="simple"
-          on:select={(event) => {
-            selectedInspectorTab = event.detail;
-          }}
-        >
-          <Tab
-            compact
-            selected={selectedInspectorTab === "profile"}
-            value={"profile"}>Profiler</Tab
+      {#if isGpt3Enabled}
+        <div class="mx-2">
+          <TabGroup
+            variant="simple"
+            on:select={(event) => {
+              selectedInspectorTab = event.detail;
+            }}
           >
-          <Tab compact selected={selectedInspectorTab === "gpt"} value={"gpt"}
-            >GPT3</Tab
-          >
-        </TabGroup>
-      </div>
-      <hr />
-      {#if selectedInspectorTab === "profile"}
+            <Tab
+              compact
+              selected={selectedInspectorTab === "profile"}
+              value={"profile"}>Profiler</Tab
+            >
+            <Tab compact selected={selectedInspectorTab === "gpt"} value={"gpt"}
+              >GPT3</Tab
+            >
+          </TabGroup>
+        </div>
+        <hr />
+        {#if selectedInspectorTab === "profile"}
+          <ModelInspector {modelName} />
+        {:else if selectedInspectorTab === "gpt"}
+          <ModelInspectorGpt {modelName} />
+        {/if}
+      {:else}
         <ModelInspector {modelName} />
-      {:else if selectedInspectorTab === "gpt"}
-        <ModelInspectorGpt {modelName} />
       {/if}
     </div>
   </WorkspaceContainer>
