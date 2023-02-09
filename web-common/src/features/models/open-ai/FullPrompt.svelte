@@ -10,7 +10,7 @@
 </script>
 
 <Dialog on:cancel={() => dispatch("close")} size="md" compact>
-  <svelte:fragment slot="title">Full prompt for GPT3</svelte:fragment>
+  <svelte:fragment slot="title">Full prompt for OpenAI</svelte:fragment>
   <div class="m-4 flex-grow">
     <div>
       The following prompt is used for Open AI's <code>/completions</code> API

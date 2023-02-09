@@ -19,9 +19,9 @@
   const dispatch = createEventDispatcher();
 
   let sql: string;
-  $: prompt = `#\tDuckDB SQL\n#\n${sourcePreview}\n#\n#\tA query to answer the question: "${
-    $form["query"] ?? "[Your question here]"
-  }"\n\nSELECT `;
+  $: prompt = `#\tDuckDB SQL\n#\n${sourcePreview}\n#\n#\tA query to answer the question: ${
+    $form["query"] ?? "YOUR QUESTION"
+  }\n\nSELECT `;
   let isLoading: boolean;
   let error: string;
 

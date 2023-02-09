@@ -56,8 +56,8 @@
 
 <div class="flex flex-col gap-y-4 flex-grow m-4">
   <div>
-    Leverage OpenAI to generate and edit your SQL code. Your source schemata
-    will be fed into the prompt.
+    Leverage OpenAI to generate and edit your SQL code. Your source schema and
+    example data will be fed into the prompt.
   </div>
   <hr />
   <GenerateSql {sourcePreview} on:sql={(e) => useSql(e.detail.sql)} />

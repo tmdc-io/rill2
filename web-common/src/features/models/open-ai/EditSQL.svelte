@@ -27,11 +27,15 @@
     modelPath
   );
   $: modelSql = $modelSqlQuery?.data?.blob;
+  $: formattedModelSql = modelSql
+    ?.split("\n")
+    .map((line) => `#\t${line}`)
+    .join("\n");
 
   let sql: string;
-  $: prompt = `#\tDuckDB SQL\n#\n${sourcePreview}\n#\n#\tThe following query is incorrect: \n\n${modelSql}\n\n#\tThe query is incorrect because: "${
-    $form["description"] ?? "[Your description here]"
-  }"\n#\tThe query rewritten to be correct:\nSELECT `;
+  $: prompt = `#\tDuckDB SQL\n#\n${sourcePreview}\n#\n#\tThe following query is incorrect: \n#\n${formattedModelSql}\n#\tThe query is incorrect because: ${
+    $form["description"] ?? "YOUR DESCRIPTION"
+  }\n#\tThe query rewritten to be correct:\n\nSELECT `;
   let isLoading: boolean;
   let error: string;
 
@@ -71,8 +75,6 @@
       sql = "SELECT " + data.choices[0].text;
       // insert a newline before each FROM, WHERE, GROUP BY, ORDER BY, LIMIT
       // sql = sql.replace(/(FROM|WHERE|GROUP BY|ORDER BY|LIMIT)/g, "\n$1"); // TODO: this is only needed sometimes
-      // prefix the sql with an informative comment
-      sql = `-- Description: ${$form["description"]}\n\n${sql}`;
       dispatch("sql", { sql });
       isLoading = false;
     },
