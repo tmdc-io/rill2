@@ -18,7 +18,6 @@
       };
     });
     selection = options[0];
-    console.log("options", options);
   });
 
   async function getAllSourceNames(instanceId: string): Promise<string[]> {
@@ -32,14 +31,16 @@
   }
 </script>
 
-<div class="whitespace-nowrap">Select your dependency</div>
+<div class="flex flex-row gap-x-2">
+  <div class="whitespace-nowrap">Select your dependency</div>
 
-<SelectMenu
-  {options}
-  tailwindClasses="overflow-hidden"
-  alignment="end"
-  bind:selection
-  on:select={() => dispatch("select", { dependency: selection?.key })}
->
-  <span class="font-bold">{selection?.main}</span>
-</SelectMenu>
+  <SelectMenu
+    {options}
+    tailwindClasses="overflow-hidden"
+    alignment="end"
+    bind:selection
+    on:select={() => dispatch("select", { dependency: selection?.key })}
+  >
+    <span class="font-bold">{selection?.main}</span>
+  </SelectMenu>
+</div>

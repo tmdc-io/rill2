@@ -2,6 +2,7 @@
   import { runtimeStore } from "@rilldata/web-local/lib/application-state-stores/application-store";
   import { invalidateAfterReconcile } from "@rilldata/web-local/lib/svelte-query/invalidation";
   import { useQueryClient } from "@sveltestack/svelte-query";
+  import Button from "../../../components/button/Button.svelte";
   import {
     useRuntimeServicePutFileAndReconcile,
     V1ReconcileResponse,
@@ -13,6 +14,8 @@
   import SelectDependency from "./SelectDependency.svelte";
 
   export let modelName: string;
+
+  let moduleSelection = "generate";
 
   let sourcePreview: string;
   const sourcePreviewQuery = useGetSourcePreview(); // TODO: this should be a query not a mutation
@@ -70,8 +73,19 @@
   </div>
   <hr />
   <SelectDependency {modelName} on:select={handleSelectDependency} />
-  <hr />
-  <GenerateSql {sourcePreview} on:sql={(e) => useSql(e.detail.sql)} />
-  <hr />
-  <EditSql {modelName} {sourcePreview} on:sql={(e) => useSql(e.detail.sql)} />
+  <div class="flex flex-row gap-x-2">
+    <Button
+      type={moduleSelection === "generate" ? "secondary" : "text"}
+      on:click={() => (moduleSelection = "generate")}>Generate</Button
+    >
+    <Button
+      type={moduleSelection === "edit" ? "secondary" : "text"}
+      on:click={() => (moduleSelection = "edit")}>Edit</Button
+    >
+  </div>
+  {#if moduleSelection === "generate"}
+    <GenerateSql {sourcePreview} on:sql={(e) => useSql(e.detail.sql)} />
+  {:else if moduleSelection === "edit"}
+    <EditSql {modelName} {sourcePreview} on:sql={(e) => useSql(e.detail.sql)} />
+  {/if}
 </div>

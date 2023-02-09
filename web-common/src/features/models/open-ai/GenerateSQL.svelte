@@ -74,7 +74,6 @@
   }
 </script>
 
-<div class="font-bold">Generate SQL</div>
 <div class="flex flex-col gap-y-2">
   Ask a question about your data! For example, you might ask of a COVID dataset:
   <ul>

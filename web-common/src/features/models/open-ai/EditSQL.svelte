@@ -86,7 +86,6 @@
   }
 </script>
 
-<div class="font-bold">Edit SQL</div>
 <div class="flex flex-col gap-y-2">Describe what's wrong with your SQL.</div>
 <form
   id="openai-edit-sql-form"
