@@ -18,6 +18,7 @@
       };
     });
     selection = options[0];
+    dispatch("select", { dependency: selection?.key });
   });
 
   async function getAllSourceNames(instanceId: string): Promise<string[]> {
@@ -32,7 +33,7 @@
 </script>
 
 <div class="flex flex-row gap-x-2">
-  <div class="whitespace-nowrap">Select your dependency</div>
+  <div class="whitespace-nowrap">Source</div>
 
   <SelectMenu
     {options}
