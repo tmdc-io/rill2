@@ -10,24 +10,34 @@
   import EditSql from "./EditSQL.svelte";
   import GenerateSql from "./GenerateSQL.svelte";
   import { useGetSourcePreview } from "./getSourcePreview";
+  import SelectDependency from "./SelectDependency.svelte";
 
   export let modelName: string;
 
   let sourcePreview: string;
   const sourcePreviewQuery = useGetSourcePreview(); // TODO: this should be a query not a mutation
-  $sourcePreviewQuery.mutate(
-    {
-      data: {
-        instanceId: $runtimeStore.instanceId,
-        sourceName: "UFO_Reports",
+
+  function handleSelectDependency(event: CustomEvent) {
+    if (!event.detail.dependency) return;
+    const dependencyName = event.detail.dependency;
+    console.log("dependencyName", dependencyName);
+    $sourcePreviewQuery.mutate(
+      {
+        data: {
+          instanceId: $runtimeStore.instanceId,
+          sourceName: dependencyName,
+        },
       },
-    },
-    {
-      onSuccess: (resp) => {
-        sourcePreview = resp.sourcePreview;
-      },
-    }
-  );
+      {
+        onSuccess: (resp) => {
+          sourcePreview = resp.sourcePreview;
+        },
+        onError: (err) => {
+          console.error(err);
+        },
+      }
+    );
+  }
 
   const queryClient = useQueryClient();
   const updateModel = useRuntimeServicePutFileAndReconcile();
@@ -59,6 +69,8 @@
     Leverage OpenAI to generate and edit your SQL code. Your source schema and
     example data will be fed into the prompt.
   </div>
+  <hr />
+  <SelectDependency {modelName} on:select={handleSelectDependency} />
   <hr />
   <GenerateSql {sourcePreview} on:sql={(e) => useSql(e.detail.sql)} />
   <hr />

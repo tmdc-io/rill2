@@ -57,15 +57,6 @@ export const useGetSourcePreview = <
   >(mutationFn, mutationOptions);
 };
 
-async function getAllSourceNames(instanceId: string): Promise<string[]> {
-  const resp = await runtimeServiceQuery(instanceId, {
-    sql: "select distinct table_name from information_schema.columns where table_schema = 'main';",
-    priority: 1,
-  });
-
-  return resp.data.map((row) => row["table_name"]);
-}
-
 async function getSourceSchema(
   instanceId: string,
   sourceName: string
