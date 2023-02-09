@@ -5,7 +5,7 @@
   import Tab from "../../../components/tab/Tab.svelte";
   import TabGroup from "../../../components/tab/TabGroup.svelte";
   import { WorkspaceContainer } from "../../../layout/workspace";
-  import ModelInspectorGpt from "../gpt/ModelInspectorGPT.svelte";
+  import SQLAssistant from "../open-ai/SQLAssistant.svelte";
   import ModelInspector from "./inspector/ModelInspector.svelte";
   import ModelBody from "./ModelBody.svelte";
   import ModelWorkspaceHeader from "./ModelWorkspaceHeader.svelte";
@@ -56,7 +56,7 @@
         {#if selectedInspectorTab === "profile"}
           <ModelInspector {modelName} />
         {:else if selectedInspectorTab === "gpt"}
-          <ModelInspectorGpt {modelName} />
+          <SQLAssistant {modelName} />
         {/if}
       {:else}
         <ModelInspector {modelName} />
