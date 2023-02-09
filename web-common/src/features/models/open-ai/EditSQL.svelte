@@ -86,18 +86,17 @@
   }
 </script>
 
-<div class="flex flex-col gap-y-2">Describe what's wrong with your SQL.</div>
 <form
   id="openai-edit-sql-form"
   autocomplete="off"
   on:submit|preventDefault={handleSubmit}
 >
+  <div>Describe what's wrong with your SQL.</div>
   <Input
     bind:value={$form["description"]}
     claimFocusOnMount
     error={$errors["description"]}
     id="description"
-    label="Description"
     disabled={isLoading}
   />
   <div class="flex flex-row gap-x-2 my-4">

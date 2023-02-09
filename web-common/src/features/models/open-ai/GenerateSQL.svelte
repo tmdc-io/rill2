@@ -74,24 +74,24 @@
   }
 </script>
 
-<div class="flex flex-col gap-y-2">
-  Ask a question about your data! For example, you might ask of a COVID dataset:
-  <ul>
-    <li>What country had the most COVID cases in 2022?</li>
-    <li>What is the percent change of COVID cases each month?</li>
-  </ul>
-</div>
 <form
   id="openai-generate-sql-form"
   autocomplete="off"
   on:submit|preventDefault={handleSubmit}
 >
+  <div>
+    Ask a question about your data! For example, you might ask of a COVID
+    dataset:
+    <ul>
+      <li>What country had the most COVID cases in 2022?</li>
+      <li>What is the percent change of COVID cases each month?</li>
+    </ul>
+  </div>
   <Input
     bind:value={$form["query"]}
     claimFocusOnMount
     error={$errors["query"]}
     id="query"
-    label="Question"
     disabled={isLoading}
   />
   <div class="flex flex-row gap-x-2 my-4">

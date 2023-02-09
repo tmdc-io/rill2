@@ -68,8 +68,8 @@
 
 <div class="flex flex-col gap-y-4 flex-grow m-4">
   <div>
-    Leverage OpenAI to generate and edit your SQL code. Your source schema and
-    example data will be fed into the prompt.
+    Leverage OpenAI to generate and edit your SQL code. Pick a source so that
+    its schema and example data can be fed into the prompt.
   </div>
   <hr />
   <SelectDependency {modelName} on:select={handleSelectDependency} />
