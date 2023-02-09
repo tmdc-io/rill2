@@ -20,7 +20,6 @@
   function handleSelectDependency(event: CustomEvent) {
     if (!event.detail.dependency) return;
     const dependencyName = event.detail.dependency;
-    console.log("dependencyName", dependencyName);
     $sourcePreviewQuery.mutate(
       {
         data: {
