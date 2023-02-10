@@ -32,16 +32,18 @@
   }
 </script>
 
-<div class="flex flex-row gap-x-2">
-  <div class="whitespace-nowrap">Source</div>
-
-  <SelectMenu
-    {options}
-    tailwindClasses="overflow-hidden"
-    alignment="end"
-    bind:selection
-    on:select={() => dispatch("select", { dependency: selection?.key })}
-  >
-    <span class="font-bold">{selection?.main}</span>
-  </SelectMenu>
+<div class="flex flex-col gap-x-2">
+  <div style="font-size: 11px;">Source</div>
+  <td class="border rounded border-gray-400 max-w-max mt-1" style:height="32px">
+    <SelectMenu
+      {options}
+      block
+      tailwindClasses="overflow-hidden"
+      alignment="end"
+      bind:selection
+      on:select={() => dispatch("select", { dependency: selection?.key })}
+    >
+      {selection?.main}
+    </SelectMenu>
+  </td>
 </div>
