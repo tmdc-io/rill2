@@ -17,7 +17,10 @@
       with the <em>code-davinci-002</em> model:
     </div>
     <br />
-    <div class="whitespace-pre overflow-auto" style="font-family: 'MD IO';">
+    <div
+      class="max-h-64 overflow-auto whitespace-pre"
+      style="font-family: 'MD IO';"
+    >
       {prompt}
     </div>
   </div>
