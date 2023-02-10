@@ -71,7 +71,6 @@
     Leverage OpenAI to generate and edit your SQL code. Pick a source so that
     its schema and example data can be fed into the prompt.
   </div>
-  <hr />
   <SelectDependency {modelName} on:select={handleSelectDependency} />
   <div class="flex flex-row gap-x-2">
     <Button
