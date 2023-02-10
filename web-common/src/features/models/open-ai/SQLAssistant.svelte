@@ -71,12 +71,12 @@
 
 <div class="flex flex-col gap-y-4 flex-grow m-4">
   <div>
-    Leverage OpenAI to generate and edit your SQL code. Pick a source so that
-    its schema and example data can be fed into the prompt.
+    Leverage OpenAI to generate and edit your SQL code. Pick a source so its
+    schema and example data can be fed into the prompt.
   </div>
   <SelectDependency {modelName} on:select={handleSelectDependency} />
   <div>
-    <div style="font-size: 11px;">Mode</div>
+    <div class="pl-1" style="font-size: 11px;">Mode</div>
     <div class="flex flex-row gap-x-2 mt-1">
       <button
         class={baseButtonClasses +

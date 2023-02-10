@@ -33,7 +33,7 @@
     .join("\n");
 
   let sql: string;
-  $: prompt = `#\tDuckDB SQL\n#\n${sourcePreview}\n#\n#\tThe following query is incorrect: \n#\n${formattedModelSql}\n#\tThe query is incorrect because: ${
+  $: prompt = `#\tDuckDB SQL\n#\n${sourcePreview}\n#\n#\tThe following query is incorrect: \n#\n${formattedModelSql}\n#\n#\tThe query is incorrect because: ${
     $form["description"] ?? "YOUR DESCRIPTION"
   }\n#\tThe query rewritten to be correct:\n\nSELECT `;
   let isLoading: boolean;
@@ -91,7 +91,7 @@
   autocomplete="off"
   on:submit|preventDefault={handleSubmit}
 >
-  <div>Describe what's wrong with your SQL.</div>
+  <div class="pl-1">Describe what's wrong with your SQL.</div>
   <Input
     bind:value={$form["description"]}
     claimFocusOnMount

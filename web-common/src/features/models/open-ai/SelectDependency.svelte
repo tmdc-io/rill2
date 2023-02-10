@@ -33,7 +33,7 @@
 </script>
 
 <div class="flex flex-col gap-x-2">
-  <div style="font-size: 11px;">Source</div>
+  <div class="pl-1" style="font-size: 11px;">Source</div>
   <td class="border rounded border-gray-400 max-w-max mt-1" style:height="32px">
     <SelectMenu
       {options}

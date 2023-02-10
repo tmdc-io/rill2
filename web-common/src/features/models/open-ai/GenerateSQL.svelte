@@ -4,6 +4,10 @@
   import { createForm } from "svelte-forms-lib";
   import { Button } from "../../../components/button";
   import Input from "../../../components/forms/Input.svelte";
+  import InfoCircle from "../../../components/icons/InfoCircle.svelte";
+  import LongDescription from "../../../components/tooltip/LongDescription.svelte";
+  import Tooltip from "../../../components/tooltip/Tooltip.svelte";
+  import TooltipContent from "../../../components/tooltip/TooltipContent.svelte";
   import Spinner from "../../entity-management/Spinner.svelte";
   import { EntityStatus } from "../../entity-management/types";
   import FullPrompt from "./FullPrompt.svelte";
@@ -79,13 +83,24 @@
   autocomplete="off"
   on:submit|preventDefault={handleSubmit}
 >
-  <div>
-    Ask a question about your data! For example, you might ask of a COVID
-    dataset:
-    <ul>
-      <li>What country had the most COVID cases in 2022?</li>
-      <li>What is the percent change of COVID cases each month?</li>
-    </ul>
+  <div class="flex flex-row items-center gap-x-1 pl-1">
+    <div>Ask a question about your data!</div>
+    <Tooltip location="bottom" alignment="middle" distance={8}>
+      <div class="text-gray-500" style="transform:translateY(-.5px)">
+        <InfoCircle size="13px" />
+      </div>
+      <TooltipContent slot="tooltip-content">
+        <LongDescription>
+          For example, you might ask of a COVID dataset:
+          <ul class="list-outside pl-6">
+            <li class="pl-1">What country had the most COVID cases in 2022?</li>
+            <li class="pl-1">
+              What is the percent change of COVID cases each month?
+            </li>
+          </ul>
+        </LongDescription>
+      </TooltipContent>
+    </Tooltip>
   </div>
   <Input
     bind:value={$form["query"]}
