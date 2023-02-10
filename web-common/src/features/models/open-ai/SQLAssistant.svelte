@@ -2,7 +2,6 @@
   import { runtimeStore } from "@rilldata/web-local/lib/application-state-stores/application-store";
   import { invalidateAfterReconcile } from "@rilldata/web-local/lib/svelte-query/invalidation";
   import { useQueryClient } from "@sveltestack/svelte-query";
-  import Button from "../../../components/button/Button.svelte";
   import {
     useRuntimeServicePutFileAndReconcile,
     V1ReconcileResponse,
@@ -18,7 +17,7 @@
   let moduleSelection = "generate";
 
   let sourcePreview: string;
-  const sourcePreviewQuery = useGetSourcePreview(); // TODO: this should be a query not a mutation
+  const sourcePreviewQuery = useGetSourcePreview();
 
   function handleSelectDependency(event: CustomEvent) {
     if (!event.detail.dependency) return;
@@ -64,6 +63,10 @@
       }
     );
   }
+
+  const baseButtonClasses =
+    "rounded p-2 text-gray-500 border border-gray-400 hover:bg-gray-200 hover:text-gray-600 hover:border-gray-500 focus:ring-blue-300 flex items-center h-8";
+  const activeButtonClasses = " border-gray-500 font-bold border-2";
 </script>
 
 <div class="flex flex-col gap-y-4 flex-grow m-4">
@@ -72,15 +75,24 @@
     its schema and example data can be fed into the prompt.
   </div>
   <SelectDependency {modelName} on:select={handleSelectDependency} />
-  <div class="flex flex-row gap-x-2">
-    <Button
-      type={moduleSelection === "generate" ? "secondary" : "text"}
-      on:click={() => (moduleSelection = "generate")}>Generate</Button
-    >
-    <Button
-      type={moduleSelection === "edit" ? "secondary" : "text"}
-      on:click={() => (moduleSelection = "edit")}>Edit</Button
-    >
+  <div>
+    <div style="font-size: 11px;">Mode</div>
+    <div class="flex flex-row gap-x-2 mt-1">
+      <button
+        class={baseButtonClasses +
+          (moduleSelection === "generate" ? activeButtonClasses : "")}
+        on:click={() => (moduleSelection = "generate")}
+      >
+        Generate
+      </button>
+      <button
+        class={baseButtonClasses +
+          (moduleSelection === "edit" ? activeButtonClasses : "")}
+        on:click={() => (moduleSelection = "edit")}
+      >
+        Edit
+      </button>
+    </div>
   </div>
   {#if moduleSelection === "generate"}
     <GenerateSql {sourcePreview} on:sql={(e) => useSql(e.detail.sql)} />
