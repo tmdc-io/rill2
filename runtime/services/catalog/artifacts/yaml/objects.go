@@ -167,10 +167,13 @@ func fromSourceArtifact(source *Source, path string) (*drivers.CatalogEntry, err
 		props["glob.page_size"] = source.GlobPageSize
 	}
 
+<<<<<<< HEAD
 	if source.S3Endpoint != "" {
 		props["endpoint"] = source.S3Endpoint
 	}
 
+=======
+>>>>>>> origin/source_extract
 	if source.HivePartition != nil {
 		props["hive_partitioning"] = *source.HivePartition
 	}
