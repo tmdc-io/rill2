@@ -32,6 +32,7 @@ type Source struct {
 	HivePartition         *bool          `yaml:"hive_partitioning,omitempty" mapstructure:"hive_partitioning,omitempty"`
 	Timeout               int32          `yaml:"timeout,omitempty"`
 	ExtractPolicy         *ExtractPolicy `yaml:"extract,omitempty"`
+	Format                string         `yaml:"format,omitempty" mapstructure:"format,omitempty"`
 }
 
 type ExtractPolicy struct {
@@ -167,15 +168,12 @@ func fromSourceArtifact(source *Source, path string) (*drivers.CatalogEntry, err
 		props["glob.page_size"] = source.GlobPageSize
 	}
 
-<<<<<<< HEAD
-	if source.S3Endpoint != "" {
-		props["endpoint"] = source.S3Endpoint
-	}
-
-=======
->>>>>>> origin/source_extract
 	if source.HivePartition != nil {
 		props["hive_partitioning"] = *source.HivePartition
+	}
+
+	if source.Format != "" {
+		props["format"] = source.Format
 	}
 
 	propsPB, err := structpb.NewStruct(props)
