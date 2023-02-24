@@ -3,6 +3,8 @@ package duckdb
 import (
 	"context"
 	"fmt"
+	"time"
+	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -46,6 +48,7 @@ func (c *connection) Exec(ctx context.Context, stmt *drivers.Statement) error {
 
 func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*drivers.Result, error) {
 	// We use the meta conn for dry run queries
+	startDryRun := time.Now()
 	if stmt.DryRun {
 		conn, release, err := c.acquireMetaConn(ctx)
 		if err != nil {
@@ -64,20 +67,25 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 		_, err = conn.ExecContext(context.Background(), fmt.Sprintf("DROP VIEW %q", name))
 		return nil, err
 	}
+	elapsedDryRun := time.Since(startDryRun)
 
 	// Acquire connection
+	startAcquireConnection := time.Now()
 	conn, release, err := c.acquireOLAPConn(ctx, stmt.Priority)
 	if err != nil {
 		return nil, err
 	}
+	elapsedAcquireConnection := time.Since(startAcquireConnection)
 	// NOTE: We can't just "defer release()" because release() will block until rows.Close() is called.
 	// We must be careful to make sure release() is called on all code paths.
 
+	startQuery := time.Now()
 	rows, err := conn.QueryxContext(ctx, stmt.Query, stmt.Args...)
 	if err != nil {
 		_ = release()
 		return nil, err
 	}
+	elapsedQuery := time.Since(startQuery)
 
 	schema, err := rowsToSchema(rows)
 	if err != nil {
@@ -85,6 +93,19 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 		_ = release()
 		return nil, err
 	}
+
+  metricsTimestamp := time.Now()
+  metricsData := map[string]interface{}{
+      "timestamp": metricsTimestamp,
+      "ts_milis": metricsTimestamp.UnixNano() / int64(time.Millisecond),
+      "query": stmt.Query,
+      "query/time": elapsedQuery,
+      "query/wait/time": elapsedAcquireConnection,
+      "query/dryrun/time": elapsedDryRun,
+      "args/cnt": len(stmt.Args),
+  }
+  metricsDataJsonBytes, _ := json.Marshal(metricsData)
+  fmt.Println(string(metricsDataJsonBytes))
 
 	res := &drivers.Result{Rows: rows, Schema: schema}
 	res.SetCleanupFunc(release) // Will call release when res.Close() is called.
