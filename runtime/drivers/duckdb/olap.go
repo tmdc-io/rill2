@@ -97,7 +97,7 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
   metricsTimestamp := time.Now()
   metricsData := map[string]interface{}{
       "timestamp": metricsTimestamp,
-      "ts_milis": metricsTimestamp.UnixNano() / int64(time.Millisecond),
+      "ts_millis": metricsTimestamp.UnixNano() / int64(time.Millisecond),
       "query": stmt.Query,
       "query/time": elapsedQuery,
       "query/wait/time": elapsedAcquireConnection,
