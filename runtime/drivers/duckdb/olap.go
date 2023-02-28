@@ -2,9 +2,9 @@ package duckdb
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
-	"encoding/json"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -48,7 +48,6 @@ func (c *connection) Exec(ctx context.Context, stmt *drivers.Statement) error {
 
 func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*drivers.Result, error) {
 	// We use the meta conn for dry run queries
-	startDryRun := time.Now()
 	if stmt.DryRun {
 		conn, release, err := c.acquireMetaConn(ctx)
 		if err != nil {
@@ -67,25 +66,40 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 		_, err = conn.ExecContext(context.Background(), fmt.Sprintf("DROP VIEW %q", name))
 		return nil, err
 	}
-	elapsedDryRun := time.Since(startDryRun)
 
 	// Acquire connection
 	startAcquireConnection := time.Now()
 	conn, release, err := c.acquireOLAPConn(ctx, stmt.Priority)
 	if err != nil {
+		emitMetrics(stmt, map[string]interface{}{
+			"elapsed_time": time.Since(startAcquireConnection),
+			"query_status": "acquire_connection_failure",
+			"error":        err,
+		})
 		return nil, err
 	}
-	elapsedAcquireConnection := time.Since(startAcquireConnection)
+	emitMetrics(stmt, map[string]interface{}{
+		"elapsed_time": time.Since(startAcquireConnection),
+		"query_status": "acquire_connection_success",
+	})
 	// NOTE: We can't just "defer release()" because release() will block until rows.Close() is called.
 	// We must be careful to make sure release() is called on all code paths.
 
 	startQuery := time.Now()
 	rows, err := conn.QueryxContext(ctx, stmt.Query, stmt.Args...)
 	if err != nil {
+		emitMetrics(stmt, map[string]interface{}{
+			"elapsed_time": time.Since(startQuery),
+			"query_status": "query_failure",
+			"error":        err,
+		})
 		_ = release()
 		return nil, err
 	}
-	elapsedQuery := time.Since(startQuery)
+	emitMetrics(stmt, map[string]interface{}{
+		"elapsed_time": time.Since(startQuery),
+		"query_status": "query_success",
+	})
 
 	schema, err := rowsToSchema(rows)
 	if err != nil {
@@ -93,19 +107,6 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 		_ = release()
 		return nil, err
 	}
-
-  metricsTimestamp := time.Now()
-  metricsData := map[string]interface{}{
-      "timestamp": metricsTimestamp,
-      "ts_millis": metricsTimestamp.UnixNano() / int64(time.Millisecond),
-      "query": stmt.Query,
-      "query/time": elapsedQuery,
-      "query/wait/time": elapsedAcquireConnection,
-      "query/dryrun/time": elapsedDryRun,
-      "args/cnt": len(stmt.Args),
-  }
-  metricsDataJsonBytes, _ := json.Marshal(metricsData)
-  fmt.Println(string(metricsDataJsonBytes))
 
 	res := &drivers.Result{Rows: rows, Schema: schema}
 	res.SetCleanupFunc(release) // Will call release when res.Close() is called.
@@ -142,4 +143,20 @@ func rowsToSchema(r *sqlx.Rows) (*runtimev1.StructType, error) {
 	}
 
 	return &runtimev1.StructType{Fields: fields}, nil
+}
+
+func emitMetrics(stmt *drivers.Statement, entries map[string]interface{}) {
+	metricsTimestamp := time.Now()
+	baseEntries := map[string]interface{}{
+		"timestamp": metricsTimestamp,
+		"ts_millis": metricsTimestamp.UnixNano() / int64(time.Millisecond),
+		"query":     stmt.Query,
+		"dry_run":   stmt.DryRun,
+		"args_cnt":  len(stmt.Args),
+	}
+	for k, v := range entries {
+		baseEntries[k] = v
+	}
+	metricsDataJsonBytes, _ := json.Marshal(baseEntries)
+	fmt.Println(string(metricsDataJsonBytes))
 }
