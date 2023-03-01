@@ -74,7 +74,6 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 		emitMetrics(stmt, map[string]interface{}{
 			"elapsed_time": time.Since(startAcquireConnection),
 			"query_status": "acquire_connection_failure",
-			"error":        err,
 		})
 		return nil, err
 	}
@@ -91,7 +90,6 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 		emitMetrics(stmt, map[string]interface{}{
 			"elapsed_time": time.Since(startQuery),
 			"query_status": "query_failure",
-			"error":        err,
 		})
 		_ = release()
 		return nil, err
