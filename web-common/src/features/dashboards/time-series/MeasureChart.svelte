@@ -7,6 +7,7 @@
     TimeSeriesMouseover,
   } from "@rilldata/web-common/components/data-graphic/guides";
   import { ChunkedLine } from "@rilldata/web-common/components/data-graphic/marks";
+  import { NumberKind } from "@rilldata/web-common/lib/number-formatting/humanizer-types";
   import { previousValueStore } from "@rilldata/web-local/lib/store-utils";
   import { extent } from "d3-array";
   import { cubicOut } from "svelte/easing";
@@ -24,6 +25,7 @@
   export let mouseoverValue;
   export let hovered = false;
   export let mouseoverFormat: (d: number) => string = (v) => v.toString();
+  export let numberKind: NumberKind = NumberKind.ANY;
 
   export let tweenProps = { duration: 400, easing: cubicOut };
 
@@ -104,7 +106,7 @@
   xMaxTweenProps={tweenProps}
   xMinTweenProps={tweenProps}
 >
-  <Axis side="right" format={mouseoverFormat} />
+  <Axis side="right" format={mouseoverFormat} {numberKind} />
   <Grid />
   <Body>
     <!-- key on the time range itself to prevent weird tweening animations.

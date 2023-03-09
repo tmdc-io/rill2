@@ -10,6 +10,7 @@
   import {
     humanizeDataType,
     NicelyFormattedTypes,
+    nicelyFormattedTypesToNumberKind,
   } from "@rilldata/web-common/features/dashboards/humanize-numbers";
   import { useMetaQuery } from "@rilldata/web-common/features/dashboards/selectors";
   import { EntityStatus } from "@rilldata/web-common/features/entity-management/types";
@@ -207,10 +208,11 @@
               yMin={yExtents[0] < 0 ? yExtents[0] : 0}
               start={startValue}
               end={endValue}
+              numberKind={nicelyFormattedTypesToNumberKind(measure?.format)}
               mouseoverFormat={(value) =>
                 formatPreset === NicelyFormattedTypes.NONE
                   ? `${value}`
-                  : humanizeDataType(value, formatPreset, {
+                  : humanizeDataType(value, measure?.format, {
                       excludeDecimalZeros: true,
                     })}
             />
