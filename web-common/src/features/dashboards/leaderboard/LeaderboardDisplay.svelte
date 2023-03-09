@@ -1,18 +1,20 @@
 <script lang="ts">
   import VirtualizedGrid from "@rilldata/web-common/components/VirtualizedGrid.svelte";
+  import { cancelDashboardQueries } from "@rilldata/web-common/features/dashboards/dashboard-queries";
   import {
     useMetaQuery,
     useModelHasTimeSeries,
   } from "@rilldata/web-common/features/dashboards/selectors";
   import {
     MetricsViewDimension,
-    useRuntimeServiceMetricsViewTotals,
+    useQueryServiceMetricsViewTotals,
     V1MetricsViewTotalsResponse,
   } from "@rilldata/web-common/runtime-client";
-  import { runtimeStore } from "@rilldata/web-local/lib/application-state-stores/application-store";
   import { getMapFromArray } from "@rilldata/web-local/lib/util/arrayUtils";
+  import { useQueryClient } from "@sveltestack/svelte-query";
   import type { UseQueryStoreResult } from "@sveltestack/svelte-query";
   import { onDestroy, onMount } from "svelte";
+  import { runtime } from "../../../runtime-client/runtime-store";
   import {
     LeaderboardValue,
     MetricsExplorerEntity,
@@ -28,11 +30,13 @@
 
   export let metricViewName: string;
 
+  const queryClient = useQueryClient();
+
   let metricsExplorer: MetricsExplorerEntity;
   $: metricsExplorer = $metricsExplorerStore.entities[metricViewName];
 
   // query the `/meta` endpoint to get the metric's measures and dimensions
-  $: metaQuery = useMetaQuery($runtimeStore.instanceId, metricViewName);
+  $: metaQuery = useMetaQuery($runtime.instanceId, metricViewName);
   let dimensions: Array<MetricsViewDimension>;
   $: dimensions = $metaQuery.data?.dimensions;
   $: measures = $metaQuery.data?.measures;
@@ -46,7 +50,7 @@
     );
 
   $: metricTimeSeries = useModelHasTimeSeries(
-    $runtimeStore.instanceId,
+    $runtime.instanceId,
     metricViewName
   );
   $: hasTimeSeries = $metricTimeSeries.data;
@@ -72,8 +76,8 @@
         },
       };
     }
-    totalsQuery = useRuntimeServiceMetricsViewTotals(
-      $runtimeStore.instanceId,
+    totalsQuery = useQueryServiceMetricsViewTotals(
+      $runtime.instanceId,
       metricViewName,
       totalsQueryParams
     );
@@ -101,6 +105,7 @@
   let leaderboardExpanded;
 
   function onSelectItem(event, item: MetricsViewDimension) {
+    cancelDashboardQueries(queryClient, metricViewName);
     metricsExplorerStore.toggleFilter(
       metricViewName,
       item.name,

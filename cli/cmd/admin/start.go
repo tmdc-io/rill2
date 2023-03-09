@@ -2,14 +2,15 @@ package admin
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/rilldata/rill/admin/database"
+	"github.com/rilldata/rill/admin"
 	"github.com/rilldata/rill/admin/server"
-	"github.com/rilldata/rill/cli/pkg/version"
+	"github.com/rilldata/rill/cli/pkg/config"
 	"github.com/rilldata/rill/runtime/pkg/graceful"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -24,20 +25,22 @@ import (
 // Env var keys must be prefixed with RILL_ADMIN_ and are converted from snake_case to CamelCase.
 // For example RILL_ADMIN_HTTP_PORT is mapped to Config.HTTPPort.
 type Config struct {
-	DatabaseDriver   string        `default:"postgres" split_words:"true"`
-	DatabaseURL      string        `split_words:"true"`
-	HTTPPort         int           `default:"8080" split_words:"true"`
-	GRPCPort         int           `default:"9090" split_words:"true"`
-	LogLevel         zapcore.Level `default:"info" split_words:"true"`
-	SessionSecret    string        `split_words:"true"`
-	AuthDomain       string        `split_words:"true"`
-	AuthClientID     string        `split_words:"true"`
-	AuthClientSecret string        `split_words:"true"`
-	AuthCallbackURL  string        `split_words:"true"`
+	DatabaseDriver         string        `default:"postgres" split_words:"true"`
+	DatabaseURL            string        `split_words:"true"`
+	HTTPPort               int           `default:"8080" split_words:"true"`
+	GRPCPort               int           `default:"9090" split_words:"true"`
+	LogLevel               zapcore.Level `default:"info" split_words:"true"`
+	ExternalURL            string        `default:"http://localhost:8080" split_words:"true"`
+	SessionKeyPairs        []string      `split_words:"true"`
+	AllowedOrigins         []string      `default:"*" split_words:"true"`
+	AuthDomain             string        `split_words:"true"`
+	AuthClientID           string        `split_words:"true"`
+	AuthClientSecret       string        `split_words:"true"`
+	DeviceVerificationHost string        `default:"http://localhost:3000" split_words:"true"`
 }
 
 // StartCmd starts an admin server. It only allows configuration using environment variables.
-func StartCmd(ver version.Version) *cobra.Command {
+func StartCmd(cliCfg *config.Config) *cobra.Command {
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start admin server",
@@ -62,29 +65,40 @@ func StartCmd(ver version.Version) *cobra.Command {
 				os.Exit(1)
 			}
 
-			// Init db
-			db, err := database.Open(conf.DatabaseDriver, conf.DatabaseURL)
+			// Init admin service
+			admOpts := &admin.Options{
+				DatabaseDriver: conf.DatabaseDriver,
+				DatabaseDSN:    conf.DatabaseURL,
+			}
+			adm, err := admin.New(admOpts, logger)
 			if err != nil {
-				logger.Fatal("error connecting to database", zap.Error(err))
+				logger.Fatal("error creating service", zap.Error(err))
+			}
+			defer adm.Close()
+
+			// Parse session keys as hex strings
+			keyPairs := make([][]byte, len(conf.SessionKeyPairs))
+			for idx, keyHex := range conf.SessionKeyPairs {
+				key, err := hex.DecodeString(keyHex)
+				if err != nil {
+					logger.Fatal("failed to parse session key from hex string to bytes")
+				}
+				keyPairs[idx] = key
 			}
 
-			// Auto-run migrations
-			err = db.Migrate(context.Background())
-			if err != nil {
-				logger.Fatal("error migrating database", zap.Error(err))
+			// Init admin server
+			srvOpts := &server.Options{
+				HTTPPort:               conf.HTTPPort,
+				GRPCPort:               conf.GRPCPort,
+				ExternalURL:            conf.ExternalURL,
+				SessionKeyPairs:        keyPairs,
+				AllowedOrigins:         conf.AllowedOrigins,
+				AuthDomain:             conf.AuthDomain,
+				AuthClientID:           conf.AuthClientID,
+				AuthClientSecret:       conf.AuthClientSecret,
+				DeviceVerificationHost: conf.DeviceVerificationHost,
 			}
-
-			// Init server
-			srvConf := server.Config{
-				HTTPPort:         conf.HTTPPort,
-				GRPCPort:         conf.GRPCPort,
-				AuthDomain:       conf.AuthDomain,
-				AuthClientID:     conf.AuthClientID,
-				AuthClientSecret: conf.AuthClientSecret,
-				AuthCallbackURL:  conf.AuthCallbackURL,
-				SessionSecret:    conf.SessionSecret,
-			}
-			s, err := server.New(logger, db, srvConf)
+			srv, err := server.New(logger, adm, srvOpts)
 			if err != nil {
 				logger.Fatal("error creating server", zap.Error(err))
 			}
@@ -92,8 +106,8 @@ func StartCmd(ver version.Version) *cobra.Command {
 			// Run server
 			ctx := graceful.WithCancelOnTerminate(context.Background())
 			group, cctx := errgroup.WithContext(ctx)
-			group.Go(func() error { return s.ServeGRPC(cctx) })
-			group.Go(func() error { return s.ServeHTTP(cctx) })
+			group.Go(func() error { return srv.ServeGRPC(cctx) })
+			group.Go(func() error { return srv.ServeHTTP(cctx) })
 			err = group.Wait()
 			if err != nil {
 				logger.Fatal("server crashed", zap.Error(err))

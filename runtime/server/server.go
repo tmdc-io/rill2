@@ -19,6 +19,7 @@ import (
 	"github.com/rilldata/rill/runtime"
 	"github.com/rilldata/rill/runtime/pkg/graceful"
 	"github.com/rilldata/rill/runtime/server/auth"
+	"github.com/rs/cors"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -32,6 +33,7 @@ var ErrForbidden = status.Error(codes.Unauthenticated, "action not allowed")
 type Options struct {
 	HTTPPort        int
 	GRPCPort        int
+	AllowedOrigins  []string
 	AuthEnable      bool
 	AuthIssuerURL   string
 	AuthAudienceURL string
@@ -39,13 +41,17 @@ type Options struct {
 
 type Server struct {
 	runtimev1.UnsafeRuntimeServiceServer
+	runtimev1.UnsafeQueryServiceServer
 	runtime *runtime.Runtime
 	opts    *Options
 	logger  *zap.Logger
 	aud     *auth.Audience
 }
 
-var _ runtimev1.RuntimeServiceServer = (*Server)(nil)
+var (
+	_ runtimev1.RuntimeServiceServer = (*Server)(nil)
+	_ runtimev1.QueryServiceServer   = (*Server)(nil)
+)
 
 func NewServer(opts *Options, rt *runtime.Runtime, logger *zap.Logger) (*Server, error) {
 	srv := &Server{
@@ -97,13 +103,14 @@ func (s *Server) ServeGRPC(ctx context.Context) error {
 		),
 	)
 	runtimev1.RegisterRuntimeServiceServer(server, s)
+	runtimev1.RegisterQueryServiceServer(server, s)
 	s.logger.Sugar().Infof("serving runtime gRPC on port:%v", s.opts.GRPCPort)
 	return graceful.ServeGRPC(ctx, server, s.opts.GRPCPort)
 }
 
 // Starts the HTTP server.
-func (s *Server) ServeHTTP(ctx context.Context) error {
-	handler, err := s.HTTPHandler(ctx)
+func (s *Server) ServeHTTP(ctx context.Context, registerAdditionalHandlers func(mux *http.ServeMux)) error {
+	handler, err := s.HTTPHandler(ctx, registerAdditionalHandlers)
 	if err != nil {
 		return err
 	}
@@ -141,12 +148,17 @@ func GRPCCodeToLevel(code codes.Code) logging.Level {
 }
 
 // HTTPHandler HTTP handler serving REST gateway.
-func (s *Server) HTTPHandler(ctx context.Context) (http.Handler, error) {
+func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers func(mux *http.ServeMux)) (http.Handler, error) {
 	// Create REST gateway
 	mux := gateway.NewServeMux(gateway.WithErrorHandler(HTTPErrorHandler))
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	grpcAddress := fmt.Sprintf(":%d", s.opts.GRPCPort)
 	err := runtimev1.RegisterRuntimeServiceHandlerFromEndpoint(ctx, mux, grpcAddress, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	err = runtimev1.RegisterQueryServiceHandlerFromEndpoint(ctx, mux, grpcAddress, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +175,50 @@ func (s *Server) HTTPHandler(ctx context.Context) (http.Handler, error) {
 		panic(err)
 	}
 
-	// Register CORS
-	handler := cors(mux)
+	// Call callback to register additional paths
+	// NOTE: This is so ugly, but not worth refactoring it properly right now.
+	httpMux := http.NewServeMux()
+	if registerAdditionalHandlers != nil {
+		registerAdditionalHandlers(httpMux)
+	}
+
+	// Add gRPC-gateway mux on /v1
+	httpMux.Handle("/v1/", mux)
+
+	// Build CORS options for runtime server
+
+	// If the AllowedOrigins contains a "*" we want to return the requester's origin instead of "*" in the "Access-Control-Allow-Origin" header.
+	// This is useful in development. In production, we set AllowedOrigins to non-wildcard values, so this does not have security implications.
+	// Details: https://github.com/rs/cors#allow--with-credentials-security-protection
+	var allowedOriginFunc func(string) bool
+	allowedOrigins := s.opts.AllowedOrigins
+	for _, origin := range s.opts.AllowedOrigins {
+		if origin == "*" {
+			allowedOriginFunc = func(origin string) bool { return true }
+			allowedOrigins = nil
+			break
+		}
+	}
+
+	corsOpts := cors.Options{
+		AllowedOrigins:  allowedOrigins,
+		AllowOriginFunc: allowedOriginFunc,
+		AllowedMethods: []string{
+			http.MethodHead,
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+		},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: false,
+		// Set max age to 1 hour (default if not set is 5 seconds)
+		MaxAge: 60 * 60,
+	}
+
+	// Wrap mux with CORS middleware
+	handler := cors.New(corsOpts).Handler(httpMux)
 
 	return handler, nil
 }
@@ -186,19 +240,4 @@ func (s *Server) Ping(ctx context.Context, req *runtimev1.PingRequest) (*runtime
 		Time:    timestamppb.New(time.Now()),
 	}
 	return resp, nil
-}
-
-func cors(h http.Handler) http.Handler {
-	// TODO: Hack for local - not production-ready
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if origin := r.Header.Get("Origin"); origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			if r.Method == "OPTIONS" && r.Header.Get("Access-Control-Request-Method") != "" {
-				w.Header().Set("Access-Control-Allow-Headers", "*")
-				w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, PATCH, DELETE")
-				return
-			}
-		}
-		h.ServeHTTP(w, r)
-	})
 }

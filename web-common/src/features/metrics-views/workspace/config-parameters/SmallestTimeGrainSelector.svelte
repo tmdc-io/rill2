@@ -10,12 +10,12 @@
     timeGrainStringToEnum,
   } from "@rilldata/web-common/features/dashboards/time-controls/time-range-utils";
   import {
-    useRuntimeServiceGetTimeRangeSummary,
+    useQueryServiceColumnTimeRange,
     V1Model,
   } from "@rilldata/web-common/runtime-client";
-  import { runtimeStore } from "@rilldata/web-local/lib/application-state-stores/application-store";
   import { getContext } from "svelte";
   import type { Writable } from "svelte/store";
+  import { runtime } from "../../../../runtime-client/runtime-store";
   import {
     CONFIG_SELECTOR,
     CONFIG_TOP_LEVEL_LABEL_CLASSES,
@@ -41,8 +41,8 @@
 
   let timeRangeQuery;
   $: if (selectedModel?.name && timeColumn) {
-    timeRangeQuery = useRuntimeServiceGetTimeRangeSummary(
-      $runtimeStore.instanceId,
+    timeRangeQuery = useQueryServiceColumnTimeRange(
+      $runtime.instanceId,
       selectedModel.name,
       { columnName: timeColumn }
     );

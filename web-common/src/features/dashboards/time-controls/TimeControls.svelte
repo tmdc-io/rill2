@@ -8,6 +8,7 @@ Constructs a TimeSeriesTimeRange object – to be used as the filter in MetricsE
 We should rename TimeSeriesTimeRange to a better name.
 -->
 <script lang="ts">
+  import { cancelDashboardQueries } from "@rilldata/web-common/features/dashboards/dashboard-queries";
   import {
     useModelAllTimeRange,
     useModelHasTimeSeries,
@@ -21,8 +22,9 @@ We should rename TimeSeriesTimeRange to a better name.
     useRuntimeServiceGetCatalogEntry,
     V1TimeGrain,
   } from "@rilldata/web-common/runtime-client";
-  import { runtimeStore } from "@rilldata/web-local/lib/application-state-stores/application-store";
+  import { useQueryClient } from "@sveltestack/svelte-query";
   import type { UseQueryStoreResult } from "@sveltestack/svelte-query";
+  import { runtime } from "../../../runtime-client/runtime-store";
   import { metricsExplorerStore, useDashboardStore } from "../dashboard-stores";
   import NoTimeDimensionCTA from "./NoTimeDimensionCTA.svelte";
   import {
@@ -36,13 +38,13 @@ We should rename TimeSeriesTimeRange to a better name.
     makeRelativeTimeRange,
     supportedTimeGrainEnums,
     TimeGrainOption,
-    timeRangeToISODuration,
   } from "./time-range-utils";
   import TimeGrainSelector from "./TimeGrainSelector.svelte";
   import TimeRangeSelector from "./TimeRangeSelector.svelte";
 
   export let metricViewName: string;
 
+  const queryClient = useQueryClient();
   $: dashboardStore = useDashboardStore(metricViewName);
 
   let baseTimeRange: TimeRange;
@@ -50,15 +52,15 @@ We should rename TimeSeriesTimeRange to a better name.
   let minTimeGrain: V1TimeGrain;
 
   let metricsViewQuery;
-  $: if ($runtimeStore.instanceId) {
+  $: if ($runtime.instanceId) {
     metricsViewQuery = useRuntimeServiceGetCatalogEntry(
-      $runtimeStore.instanceId,
+      $runtime.instanceId,
       metricViewName
     );
   }
 
   $: hasTimeSeriesQuery = useModelHasTimeSeries(
-    $runtimeStore.instanceId,
+    $runtime.instanceId,
     metricViewName
   );
   $: hasTimeSeries = $hasTimeSeriesQuery?.data;
@@ -66,12 +68,12 @@ We should rename TimeSeriesTimeRange to a better name.
   let allTimeRangeQuery: UseQueryStoreResult;
   $: if (
     hasTimeSeries &&
-    !!$runtimeStore?.instanceId &&
+    !!$runtime?.instanceId &&
     !!$metricsViewQuery?.data?.entry?.metricsView?.model &&
     !!$metricsViewQuery?.data?.entry?.metricsView?.timeDimension
   ) {
     allTimeRangeQuery = useModelAllTimeRange(
-      $runtimeStore.instanceId,
+      $runtime.instanceId,
       $metricsViewQuery.data.entry.metricsView.model,
       $metricsViewQuery.data.entry.metricsView.timeDimension
     );
@@ -182,6 +184,7 @@ We should rename TimeSeriesTimeRange to a better name.
       interval: timeGrain,
     };
 
+    cancelDashboardQueries(queryClient, metricViewName);
     metricsExplorerStore.setSelectedTimeRange(metricViewName, newTimeRange);
   }
 </script>
