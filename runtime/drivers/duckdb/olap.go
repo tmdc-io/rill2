@@ -2,8 +2,9 @@ package duckdb
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"time"
 
 	"github.com/google/uuid"
@@ -71,13 +72,13 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 	startAcquireConnection := time.Now()
 	conn, release, err := c.acquireOLAPConn(ctx, stmt.Priority)
 	if err != nil {
-		emitMetrics(stmt, map[string]interface{}{
+		c.logMetricSet(stmt, map[string]interface{}{
 			"elapsed_time": time.Since(startAcquireConnection),
 			"query_status": "acquire_connection_failure",
 		})
 		return nil, err
 	}
-	emitMetrics(stmt, map[string]interface{}{
+	c.logMetricSet(stmt, map[string]interface{}{
 		"elapsed_time": time.Since(startAcquireConnection),
 		"query_status": "acquire_connection_success",
 	})
@@ -87,14 +88,14 @@ func (c *connection) Execute(ctx context.Context, stmt *drivers.Statement) (*dri
 	startQuery := time.Now()
 	rows, err := conn.QueryxContext(ctx, stmt.Query, stmt.Args...)
 	if err != nil {
-		emitMetrics(stmt, map[string]interface{}{
+		c.logMetricSet(stmt, map[string]interface{}{
 			"elapsed_time": time.Since(startQuery),
 			"query_status": "query_failure",
 		})
 		_ = release()
 		return nil, err
 	}
-	emitMetrics(stmt, map[string]interface{}{
+	c.logMetricSet(stmt, map[string]interface{}{
 		"elapsed_time": time.Since(startQuery),
 		"query_status": "query_success",
 	})
@@ -143,18 +144,18 @@ func rowsToSchema(r *sqlx.Rows) (*runtimev1.StructType, error) {
 	return &runtimev1.StructType{Fields: fields}, nil
 }
 
-func emitMetrics(stmt *drivers.Statement, entries map[string]interface{}) {
-	metricsTimestamp := time.Now()
-	baseEntries := map[string]interface{}{
-		"timestamp": metricsTimestamp,
-		"ts_millis": metricsTimestamp.UnixNano() / int64(time.Millisecond),
+func (c *connection) logMetricSet(stmt *drivers.Statement, metricSet map[string]interface{}) {
+	finalMetricSet := map[string]interface{}{
 		"query":     stmt.Query,
 		"dry_run":   stmt.DryRun,
 		"args_cnt":  len(stmt.Args),
 	}
-	for k, v := range entries {
-		baseEntries[k] = v
+	for k, v := range metricSet {
+		finalMetricSet[k] = v
 	}
-	metricsDataJsonBytes, _ := json.Marshal(baseEntries)
-	fmt.Println(string(metricsDataJsonBytes))
+	fields := make([]zapcore.Field, 0, len(finalMetricSet))
+	for k, v := range finalMetricSet {
+		fields = append(fields, zap.Any(k, v))
+	}
+	c.logger.Debug("query metrics", fields...)
 }
