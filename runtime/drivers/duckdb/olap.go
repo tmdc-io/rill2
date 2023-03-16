@@ -153,9 +153,9 @@ func (c *connection) DropDB() error {
 
 func (c *connection) logMetricSet(stmt *drivers.Statement, metricSet map[string]interface{}) {
 	finalMetricSet := map[string]interface{}{
-		"query":     stmt.Query,
-		"dry_run":   stmt.DryRun,
-		"args_cnt":  len(stmt.Args),
+		"query":    stmt.Query,
+		"dry_run":  stmt.DryRun,
+		"args_cnt": len(stmt.Args),
 	}
 	for k, v := range metricSet {
 		finalMetricSet[k] = v
