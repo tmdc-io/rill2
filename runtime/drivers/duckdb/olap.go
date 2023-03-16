@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -142,6 +143,12 @@ func rowsToSchema(r *sqlx.Rows) (*runtimev1.StructType, error) {
 	}
 
 	return &runtimev1.StructType{Fields: fields}, nil
+}
+
+func (c *connection) DropDB() error {
+	// ignoring close error
+	c.Close()
+	return os.Remove(c.config.DBFilePath)
 }
 
 func (c *connection) logMetricSet(stmt *drivers.Statement, metricSet map[string]interface{}) {
