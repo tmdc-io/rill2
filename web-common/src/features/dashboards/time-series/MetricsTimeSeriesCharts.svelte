@@ -87,6 +87,7 @@
         timeEnd: metricsExplorer.selectedTimeRange?.end,
         // Quick hack for now, API expects "day" instead of "1 day"
         timeGranularity: metricsExplorer.selectedTimeRange?.interval,
+        forecastPeriod: 10,
       }
     );
   }

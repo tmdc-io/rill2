@@ -25,7 +25,7 @@ type MetricsViewTimeSeries struct {
 	Sort            []*runtimev1.MetricsViewSort `json:"sort,omitempty"`
 	Filter          *runtimev1.MetricsViewFilter `json:"filter,omitempty"`
 	TimeGranularity runtimev1.TimeGrain          `json:"time_granularity,omitempty"`
-	ForecastPeriod  int                          `json:"offset,omitempty"`
+	ForecastPeriod  int64                        `json:"forecast_period,omitempty"`
 
 	Result *runtimev1.MetricsViewTimeSeriesResponse `json:"-"`
 }
@@ -99,7 +99,7 @@ func (q *MetricsViewTimeSeries) Resolve(ctx context.Context, rt *runtime.Runtime
 
 	r := tsq.Result
 
-	fResults := getForecasted(&q.TimeGranularity, r.Results, q.ForecastPeriod)
+	fResults := getForecasted(&q.TimeGranularity, r.Results, int(q.ForecastPeriod))
 	q.Result = &runtimev1.MetricsViewTimeSeriesResponse{
 		Meta:         r.Meta,
 		Data:         r.Results,

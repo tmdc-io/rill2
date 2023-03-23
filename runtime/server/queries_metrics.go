@@ -49,6 +49,7 @@ func (s *Server) MetricsViewTimeSeries(ctx context.Context, req *runtimev1.Metri
 		TimeEnd:         req.TimeEnd,
 		TimeGranularity: req.TimeGranularity,
 		Filter:          req.Filter,
+		ForecastPeriod:  int64(req.ForecastPeriod),
 	}
 
 	err := s.runtime.Query(ctx, req.InstanceId, q, int(req.Priority))
