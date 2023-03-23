@@ -88,6 +88,7 @@
         timeEnd: metricsExplorer.selectedTimeRange?.end,
         // Quick hack for now, API expects "day" instead of "1 day"
         timeGranularity: metricsExplorer.selectedTimeRange?.interval,
+        forecastPeriod: parseInt($forecastStore),
       }
     );
   }
@@ -98,8 +99,12 @@
   // we make a copy of the data that avoids `undefined` transition states.
   // TODO: instead, try using svelte-query's `keepPreviousData = True` option.
   let dataCopy;
+  let predDataCopy;
 
   $: if ($timeSeriesQuery?.data?.data) dataCopy = $timeSeriesQuery.data.data;
+
+  $: if ($timeSeriesQuery?.data?.data)
+    predDataCopy = $timeSeriesQuery.data.forecastData;
 
   ////////////////
   //PREDICTION////
@@ -107,40 +112,48 @@
   let predictedData = [];
   let predictionPeriod = parseInt($forecastStore);
 
+  $: console.log($timeSeriesQuery?.data);
   // formattedData adjusts the data to account for Javascript's handling of timezones
   let formattedData;
+  let formattedForecastData;
+
   $: if (dataCopy && dataCopy?.length) {
     formattedData = convertTimestampPreview(dataCopy, true).map((di, _i) => {
       di = { ts: di.ts, bin: di.bin, ...di.records };
       return di;
     });
 
+    formattedForecastData = convertTimestampPreview(predDataCopy, true).map(
+      (di, _i) => {
+        di = { ts: di.ts, bin: di.bin, ...di.records };
+        return di;
+      }
+    );
+
     // Basic data generation for the prediction
     const lastDatum = formattedData[formattedData.length - 1];
     const lastDatumDate = lastDatum.ts;
 
-    console.log("DATE", lastDatum, lastDatumDate);
+    // for (let i = 1; i <= predictionPeriod; i++) {
+    //   let predObj = {
+    //     ts: getOffset(lastDatumDate, `PT${i}H`, TimeOffsetType.ADD),
+    //   };
 
-    for (let i = 1; i <= predictionPeriod; i++) {
-      let predObj = {
-        ts: getOffset(lastDatumDate, `PT${i}H`, TimeOffsetType.ADD),
-      };
+    //   for (const measure of selectedMeasureNames) {
+    //     let lastDatumValue = lastDatum[measure];
+    //     let lastDiff =
+    //       lastDatum[measure] - formattedData[formattedData.length - 2][measure];
 
-      for (const measure of selectedMeasureNames) {
-        let lastDatumValue = lastDatum[measure];
-        let lastDiff =
-          lastDatum[measure] - formattedData[formattedData.length - 2][measure];
+    //     predObj[measure] =
+    //       lastDatumValue + i * (-0.5 + Math.random()) * lastDiff;
+    //     predObj[measure + "_upper"] =
+    //       lastDatumValue + i * Math.random() * lastDiff;
+    //     predObj[measure + "_lower"] =
+    //       lastDatumValue - i * Math.random() * lastDiff;
+    //   }
 
-        predObj[measure] =
-          lastDatumValue + i * (-0.5 + Math.random()) * lastDiff;
-        predObj[measure + "_upper"] =
-          lastDatumValue + i * Math.random() * lastDiff;
-        predObj[measure + "_lower"] =
-          lastDatumValue - i * Math.random() * lastDiff;
-      }
-
-      predictedData.push(predObj);
-    }
+    //   predictedData.push(predObj);
+    // }
 
     // predictedData = [
     //   {
@@ -164,7 +177,8 @@
     // ];
 
     // Add predicted data to the end of the data array
-    formattedData = formattedData.concat(predictedData);
+    // formattedData = formattedData.concat(predictedData);
+    formattedData = formattedData.concat(formattedForecastData);
   }
 
   let mouseoverValue = undefined;
