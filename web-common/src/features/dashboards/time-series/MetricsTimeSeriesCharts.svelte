@@ -24,6 +24,7 @@
     V1MetricsViewTimeSeriesResponse,
     V1MetricsViewTotalsResponse,
   } from "@rilldata/web-common/runtime-client";
+  import { forecastStore } from "@rilldata/web-local/lib/application-state-stores/app-store";
   import { convertTimestampPreview } from "@rilldata/web-local/lib/util/convertTimestampPreview";
   import type { UseQueryStoreResult } from "@sveltestack/svelte-query";
   import { runtime } from "../../../runtime-client/runtime-store";
@@ -100,13 +101,11 @@
 
   $: if ($timeSeriesQuery?.data?.data) dataCopy = $timeSeriesQuery.data.data;
 
-  $: console.log($timeSeriesQuery?.data, "dataCopy");
-
   ////////////////
   //PREDICTION////
   ///////////////
-  let predictedData;
-  let predictionPeriod = 3;
+  let predictedData = [];
+  let predictionPeriod = parseInt($forecastStore);
 
   // formattedData adjusts the data to account for Javascript's handling of timezones
   let formattedData;
@@ -116,43 +115,56 @@
       return di;
     });
 
-    predictedData = [
-      {
-        ts: getOffset(
-          formattedData[formattedData.length - 1].ts,
-          "PT1H",
-          TimeOffsetType.ADD
-        ),
-        measure_0: 3640000,
-        measure_0_upper: 3740000,
-        measure_0_lower: 3540000,
-      },
-      {
-        ts: getOffset(
-          formattedData[formattedData.length - 1].ts,
-          "PT2H",
-          TimeOffsetType.ADD
-        ),
-        measure_0: 3880000,
-        measure_0_upper: 4080000,
-        measure_0_lower: 3680000,
-      },
-      {
-        ts: getOffset(
-          formattedData[formattedData.length - 1].ts,
-          "PT3H",
-          TimeOffsetType.ADD
-        ),
-        measure_0: 3500000,
-        measure_0_upper: 3800000,
-        measure_0_lower: 3200000,
-      },
-    ];
+    // Basic data generation for the prediction
+    const lastDatum = formattedData[formattedData.length - 1];
+    const lastDatumDate = lastDatum.ts;
+
+    console.log("DATE", lastDatum, lastDatumDate);
+
+    for (let i = 1; i <= predictionPeriod; i++) {
+      let predObj = {
+        ts: getOffset(lastDatumDate, `PT${i}H`, TimeOffsetType.ADD),
+      };
+
+      for (const measure of selectedMeasureNames) {
+        let lastDatumValue = lastDatum[measure];
+        let lastDiff =
+          lastDatum[measure] - formattedData[formattedData.length - 2][measure];
+
+        predObj[measure] =
+          lastDatumValue + i * (-0.5 + Math.random()) * lastDiff;
+        predObj[measure + "_upper"] =
+          lastDatumValue + i * Math.random() * lastDiff;
+        predObj[measure + "_lower"] =
+          lastDatumValue - i * Math.random() * lastDiff;
+      }
+
+      predictedData.push(predObj);
+    }
+
+    // predictedData = [
+    //   {
+    //     ts: getOffset(lastDatumDate, "PT1H", TimeOffsetType.ADD),
+    //     measure_0: 3640000,
+    //     measure_0_upper: 3740000,
+    //     measure_0_lower: 3540000,
+    //   },
+    //   {
+    //     ts: getOffset(lastDatumDate, "PT2H", TimeOffsetType.ADD),
+    //     measure_0: 3880000,
+    //     measure_0_upper: 4080000,
+    //     measure_0_lower: 3680000,
+    //   },
+    //   {
+    //     ts: getOffset(lastDatumDate, "PT3H", TimeOffsetType.ADD),
+    //     measure_0: 3500000,
+    //     measure_0_upper: 3800000,
+    //     measure_0_lower: 3200000,
+    //   },
+    // ];
 
     // Add predicted data to the end of the data array
     formattedData = formattedData.concat(predictedData);
-
-    console.log(formattedData);
   }
 
   let mouseoverValue = undefined;

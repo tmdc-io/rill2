@@ -38,8 +38,7 @@ export function computeSegments(lineData, defined, isNext = () => true) {
     return segments;
   }, []);
 
-  const predictionPeriodVal = get(forecastStore);
-  const predictionPeriod = parseInt(predictionPeriodVal);
+  const predictionPeriod = parseInt(get(forecastStore));
   // Create a segment for predictions
   const endSegment = segments[segments.length - 1];
   const lastSegment = endSegment.slice(0, endSegment.length - predictionPeriod);

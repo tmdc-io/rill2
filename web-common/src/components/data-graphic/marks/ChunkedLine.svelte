@@ -247,10 +247,10 @@ Over time, we'll make this the default Line implementation, but it's not quite t
         <stop offset="95%" stop-color={color} stop-opacity={stopOpacity} />
       </linearGradient>
       <linearGradient id="gradient-{id}-pred" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="5%" stop-color="hsla(220,70%, 80%, .25)" />
+        <stop offset="5%" stop-color="hsla(283, 39%, 53%, 0.2)" />
         <stop
           offset="95%"
-          stop-color="hsla(220,70%, 80%, .25)"
+          stop-color="hsla(283, 39%, 53%, 0.2)"
           stop-opacity={stopOpacity}
         />
       </linearGradient>
