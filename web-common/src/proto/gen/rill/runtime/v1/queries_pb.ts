@@ -397,6 +397,11 @@ export class MetricsViewTimeSeriesResponse extends Message<MetricsViewTimeSeries
    */
   data: TimeSeriesValue[] = [];
 
+  /**
+   * @generated from field: repeated rill.runtime.v1.TimeSeriesValue forecastData = 3;
+   */
+  forecastData: TimeSeriesValue[] = [];
+
   constructor(data?: PartialMessage<MetricsViewTimeSeriesResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -407,6 +412,7 @@ export class MetricsViewTimeSeriesResponse extends Message<MetricsViewTimeSeries
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "meta", kind: "message", T: MetricsViewColumn, repeated: true },
     { no: 2, name: "data", kind: "message", T: TimeSeriesValue, repeated: true },
+    { no: 3, name: "forecastData", kind: "message", T: TimeSeriesValue, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MetricsViewTimeSeriesResponse {

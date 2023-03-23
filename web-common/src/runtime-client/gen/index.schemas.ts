@@ -510,6 +510,7 @@ export interface V1MetricsViewToplistResponse {
 
 export interface V1MetricsViewTimeSeriesResponse {
   data?: V1TimeSeriesValue[];
+  forecastData?: V1TimeSeriesValue[];
   meta?: V1MetricsViewColumn[];
 }
 

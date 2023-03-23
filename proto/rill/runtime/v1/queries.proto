@@ -189,6 +189,7 @@ message MetricsViewTimeSeriesRequest {
 message MetricsViewTimeSeriesResponse {
   repeated MetricsViewColumn meta = 1;
   repeated TimeSeriesValue data = 2;
+  repeated TimeSeriesValue forecastData = 3;
 }
 
 // Request message for QueryService.MetricsViewTotals

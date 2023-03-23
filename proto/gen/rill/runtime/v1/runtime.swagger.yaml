@@ -1869,6 +1869,10 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/v1TimeSeriesValue'
+      forecastData:
+        type: array
+        items:
+          $ref: '#/definitions/v1TimeSeriesValue'
       meta:
         type: array
         items:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime"
@@ -94,12 +95,28 @@ func (q *MetricsViewTimeSeries) Resolve(ctx context.Context, rt *runtime.Runtime
 
 	r := tsq.Result
 
+	fResults := getForcasted(r.Results)
 	q.Result = &runtimev1.MetricsViewTimeSeriesResponse{
-		Meta: r.Meta,
-		Data: r.Results,
+		Meta:         r.Meta,
+		Data:         r.Results,
+		ForecastData: fResults,
 	}
 
 	return nil
+}
+
+func getForcasted(result []*runtimev1.TimeSeriesValue) []*runtimev1.TimeSeriesValue {
+	var forcastedResult []*runtimev1.TimeSeriesValue
+	for _, r := range result {
+		ts := r.Ts.AsTime().Add(time.Hour * 24)
+		forcastedResult = append(forcastedResult, &runtimev1.TimeSeriesValue{
+			Ts:      timestamppb.New(ts),
+			Bin:     r.Bin,
+			Records: r.Records,
+		})
+	}
+
+	return forcastedResult
 }
 
 func toMeasures(measures []*runtimev1.MetricsView_Measure, measureNames []string) ([]*runtimev1.ColumnTimeSeriesRequest_BasicMeasure, error) {
