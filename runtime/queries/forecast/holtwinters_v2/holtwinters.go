@@ -158,7 +158,7 @@ func validateParams(series []float64, seasonLength int, alpha float64, beta floa
 
 // initialSeasonalComponentsAdditive calculates the initial seasonal values for the additive method
 func initialSeasonalComponentsAdditive(series []float64, seasonLength int) []float64 {
-	var seasonals = make([]float64, seasonLength)
+	seasonals := make([]float64, seasonLength)
 	seasonAverages := []float64{}
 	nSeasons := len(series) / seasonLength
 	for i := 0; i < nSeasons; i++ {
@@ -182,7 +182,7 @@ func initialSeasonalComponentsAdditive(series []float64, seasonLength int) []flo
 
 // initialSeasonalComponentsMultiplicative calculates the initial seasonal values for the multiplicative method
 func initialSeasonalComponentsMultiplicative(series []float64, seasonLength int) []float64 {
-	var seasonals = make([]float64, seasonLength)
+	seasonals := make([]float64, seasonLength)
 	seasonAverages := []float64{}
 	nSeasons := len(series) / seasonLength
 	for i := 0; i < nSeasons; i++ {

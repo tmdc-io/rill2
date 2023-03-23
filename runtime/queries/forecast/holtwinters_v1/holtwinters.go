@@ -14,21 +14,28 @@ import (
 //
 // y - Time series data.
 // alpha - Exponential smoothing coefficients for level, trend,
-//        seasonal components.
+//
+//	seasonal components.
+//
 // beta - Exponential smoothing coefficients for level, trend,
-//        seasonal components.
+//
+//	seasonal components.
+//
 // gamma - Exponential smoothing coefficients for level, trend,
-//         seasonal components.
+//
+//	seasonal components.
+//
 // perdiod - A complete season's data consists of L periods. And we need
-//           to estimate the trend factor from one period to the next. To
-//           accomplish this, it is advisable to use two complete seasons;
-//           that is, 2L periods.
+//
+//	to estimate the trend factor from one period to the next. To
+//	accomplish this, it is advisable to use two complete seasons;
+//	that is, 2L periods.
+//
 // m - Extrapolated future data points.
 //   - 4 quarterly,
 //   - 7 weekly,
 //   - 12 monthly
 func Forecast(y []float64, alpha, beta, gamma float64, period, m int) (forecast []float64, err error) {
-
 	if err = validateArguments(y, alpha, beta, gamma, period, m); err != nil {
 		forecast = nil
 		return
@@ -44,10 +51,8 @@ func Forecast(y []float64, alpha, beta, gamma float64, period, m int) (forecast 
 	return
 }
 
-//
 // Validate input.
 func validateArguments(y []float64, alpha, beta, gamma float64, period, m int) (err error) {
-
 	if len(y) == 0 {
 		err = errors.New("value of y should be not null")
 	}
@@ -77,7 +82,6 @@ func validateArguments(y []float64, alpha, beta, gamma float64, period, m int) (
 // This method realizes the Holt-Winters equations.
 // Forecast for m periods.
 func calculateHoltWinters(y []float64, a0, b0, alpha, beta, gamma float64, initialSeasonalIndices []float64, period, m int) []float64 {
-
 	st := make([]float64, len(y))
 	bt := make([]float64, len(y))
 	it := make([]float64, len(y))
@@ -91,7 +95,6 @@ func calculateHoltWinters(y []float64, a0, b0, alpha, beta, gamma float64, initi
 	}
 
 	for i := 2; i < len(y); i++ {
-
 		// overall smoothing
 		if (i - period) >= 0 {
 			st[i] = alpha*y[i]/it[i-period] + (1.0-alpha)*(st[i-1]+bt[i-1])
@@ -123,7 +126,6 @@ func initialLevel(y []float64) float64 {
 
 // See: http://www.itl.nist.gov/div898/handbook/pmc/section4/pmc435.htm
 func initialTrend(y []float64, period int) float64 {
-
 	var sum float64
 	sum = 0
 
@@ -136,7 +138,6 @@ func initialTrend(y []float64, period int) float64 {
 
 // See: http://www.itl.nist.gov/div898/handbook/pmc/section4/pmc435.htm
 func seasonalIndicies(y []float64, period, seasons int) []float64 {
-
 	seasonalAverage := make([]float64, seasons)
 	seasonalIndices := make([]float64, period)
 
