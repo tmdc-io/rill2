@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
@@ -166,6 +167,8 @@ func getForecasted(t *runtimev1.TimeGrain, results []*runtimev1.TimeSeriesValue,
 		fields := make(map[string]any)
 		for k, v := range forecastedTsValues {
 			fields[k] = v[i+len(originalTsValues[k])]
+			fields[k + "_upper"] = v[i + len(originalTsValues[k])] * math.Pow(1.05, float64(i))
+			fields[k + "_lower"] = v[i + len(originalTsValues[k])] / math.Pow(1.05, float64(i))
 		}
 		toStruct, _ := pbutil.ToStruct(fields)
 		forecastedResult = append(forecastedResult, &runtimev1.TimeSeriesValue{
