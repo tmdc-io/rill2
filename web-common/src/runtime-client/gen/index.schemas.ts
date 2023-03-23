@@ -97,6 +97,7 @@ export type QueryServiceMetricsViewTotalsBody = {
 
 export type QueryServiceMetricsViewTimeSeriesBody = {
   filter?: V1MetricsViewFilter;
+  forecastPeriod?: number;
   measureNames?: string[];
   priority?: number;
   timeEnd?: string;

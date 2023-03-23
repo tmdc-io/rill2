@@ -346,6 +346,11 @@ export class MetricsViewTimeSeriesRequest extends Message<MetricsViewTimeSeriesR
    */
   priority = 0;
 
+  /**
+   * @generated from field: int32 forecast_period = 9;
+   */
+  forecastPeriod = 0;
+
   constructor(data?: PartialMessage<MetricsViewTimeSeriesRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -362,6 +367,7 @@ export class MetricsViewTimeSeriesRequest extends Message<MetricsViewTimeSeriesR
     { no: 6, name: "time_granularity", kind: "enum", T: proto3.getEnumType(TimeGrain) },
     { no: 7, name: "filter", kind: "message", T: MetricsViewFilter },
     { no: 8, name: "priority", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
+    { no: 9, name: "forecast_period", kind: "scalar", T: 5 /* ScalarType.INT32 */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MetricsViewTimeSeriesRequest {

@@ -183,6 +183,7 @@ message MetricsViewTimeSeriesRequest {
   TimeGrain time_granularity = 6;
   MetricsViewFilter filter = 7;
   int32 priority = 8;
+  int32 forecast_period = 9;
 }
 
 // Response message for QueryService.MetricsViewTimeSeries

@@ -605,6 +605,9 @@ paths:
             properties:
               filter:
                 $ref: '#/definitions/v1MetricsViewFilter'
+              forecastPeriod:
+                type: integer
+                format: int32
               measureNames:
                 type: array
                 items:

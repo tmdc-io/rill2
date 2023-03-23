@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/rilldata/rill/runtime/pkg/pbutil"
-	"github.com/rilldata/rill/runtime/queries/forecast/holtwinters_v2"
 	"log"
 	"time"
 
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime"
 	"github.com/rilldata/rill/runtime/drivers"
+	"github.com/rilldata/rill/runtime/pkg/pbutil"
+	"github.com/rilldata/rill/runtime/queries/forecast/holtwinters_v2"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -25,6 +25,7 @@ type MetricsViewTimeSeries struct {
 	Sort            []*runtimev1.MetricsViewSort `json:"sort,omitempty"`
 	Filter          *runtimev1.MetricsViewFilter `json:"filter,omitempty"`
 	TimeGranularity runtimev1.TimeGrain          `json:"time_granularity,omitempty"`
+	ForecastPeriod  int                          `json:"offset,omitempty"`
 
 	Result *runtimev1.MetricsViewTimeSeriesResponse `json:"-"`
 }
@@ -98,7 +99,7 @@ func (q *MetricsViewTimeSeries) Resolve(ctx context.Context, rt *runtime.Runtime
 
 	r := tsq.Result
 
-	fResults := getForecasted(&q.TimeGranularity, r.Results, 5)
+	fResults := getForecasted(&q.TimeGranularity, r.Results, q.ForecastPeriod)
 	q.Result = &runtimev1.MetricsViewTimeSeriesResponse{
 		Meta:         r.Meta,
 		Data:         r.Results,
@@ -138,7 +139,7 @@ func toTimeGrainNs(specifier runtimev1.TimeGrain, ts time.Time) int64 {
 
 func getForecasted(t *runtimev1.TimeGrain, results []*runtimev1.TimeSeriesValue, timePeriod int) []*runtimev1.TimeSeriesValue {
 	nForecastedValues := timePeriod
-	var originalTsValues = make(map[string][]float64)
+	originalTsValues := make(map[string][]float64)
 	for _, r := range results {
 		for k, v := range r.Records.Fields {
 			if originalTsValues[k] == nil {
@@ -147,7 +148,7 @@ func getForecasted(t *runtimev1.TimeGrain, results []*runtimev1.TimeSeriesValue,
 			originalTsValues[k] = append(originalTsValues[k], v.GetNumberValue())
 		}
 	}
-	var forecastedTsValues = make(map[string][]float64)
+	forecastedTsValues := make(map[string][]float64)
 	for k, v := range originalTsValues {
 		forecasted, err := holtwinters_v2.PredictAdditive(v, 2, 0.5, 0.4, 0.6, nForecastedValues)
 		if err != nil {
@@ -164,12 +165,12 @@ func getForecasted(t *runtimev1.TimeGrain, results []*runtimev1.TimeSeriesValue,
 		ts = timestamppb.New(ts.AsTime().Add(time.Duration(duration)))
 		fields := make(map[string]any)
 		for k, v := range forecastedTsValues {
-			fields[k] = v[i + len(originalTsValues[k])]
+			fields[k] = v[i+len(originalTsValues[k])]
 		}
 		toStruct, _ := pbutil.ToStruct(fields)
 		forecastedResult = append(forecastedResult, &runtimev1.TimeSeriesValue{
-			Ts:  ts,
-			Bin: result.Bin,
+			Ts:      ts,
+			Bin:     result.Bin,
 			Records: toStruct,
 		})
 	}

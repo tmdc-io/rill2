@@ -872,6 +872,8 @@ func (m *MetricsViewTimeSeriesRequest) validate(all bool) error {
 
 	// no validation rules for Priority
 
+	// no validation rules for ForecastPeriod
+
 	if len(errors) > 0 {
 		return MetricsViewTimeSeriesRequestMultiError(errors)
 	}
