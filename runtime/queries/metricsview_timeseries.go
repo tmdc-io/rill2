@@ -95,7 +95,7 @@ func (q *MetricsViewTimeSeries) Resolve(ctx context.Context, rt *runtime.Runtime
 
 	r := tsq.Result
 
-	fResults := getForcasted(r.Results)
+	fResults := getForcasted(&q.TimeGranularity, r.Results, 5)
 	q.Result = &runtimev1.MetricsViewTimeSeriesResponse{
 		Meta:         r.Meta,
 		Data:         r.Results,
@@ -105,14 +105,47 @@ func (q *MetricsViewTimeSeries) Resolve(ctx context.Context, rt *runtime.Runtime
 	return nil
 }
 
-func getForcasted(result []*runtimev1.TimeSeriesValue) []*runtimev1.TimeSeriesValue {
+func daysIn(m time.Month, year int) int {
+	return time.Date(year, m+1, 0, 0, 0, 0, 0, time.UTC).Day()
+}
+
+func toTimeGrainNs(specifier runtimev1.TimeGrain, ts time.Time) int64 {
+	ts.Month()
+
+	switch specifier {
+	case runtimev1.TimeGrain_TIME_GRAIN_MILLISECOND:
+		return time.Millisecond.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_SECOND:
+		return time.Second.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_MINUTE:
+		return time.Minute.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_HOUR:
+		return time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_DAY:
+		return 24 * time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_WEEK:
+		return 24 * 7 * time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_MONTH:
+		return int64(daysIn(ts.Month(), ts.Year())) * 24 * time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_YEAR:
+		return int64(daysIn(ts.Month(), ts.Year())) * 24 * time.Hour.Nanoseconds()
+	}
+	panic(fmt.Errorf("unconvertable time grain specifier: %v", specifier))
+}
+
+func getForcasted(t *runtimev1.TimeGrain, results []*runtimev1.TimeSeriesValue, timePeriod int) []*runtimev1.TimeSeriesValue {
+	result := results[len(results)-1]
 	var forcastedResult []*runtimev1.TimeSeriesValue
-	for _, r := range result {
-		ts := r.Ts.AsTime().Add(time.Hour * 24)
+	ts := result.Ts
+
+	for i := 1; i < timePeriod; i++ {
+		duration := toTimeGrainNs(*t, ts.AsTime())
+		ts = timestamppb.New(ts.AsTime().Add(time.Duration(duration)))
+
 		forcastedResult = append(forcastedResult, &runtimev1.TimeSeriesValue{
-			Ts:      timestamppb.New(ts),
-			Bin:     r.Bin,
-			Records: r.Records,
+			Ts:      ts,
+			Bin:     result.Bin,
+			Records: result.Records,
 		})
 	}
 

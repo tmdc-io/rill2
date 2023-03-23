@@ -100,6 +100,7 @@
 
   $: if ($timeSeriesQuery?.data?.data) dataCopy = $timeSeriesQuery.data.data;
 
+  $:console.log($timeSeriesQuery?.data)
   // formattedData adjusts the data to account for Javascript's handling of timezones
   let formattedData;
   $: if (dataCopy && dataCopy?.length) {
