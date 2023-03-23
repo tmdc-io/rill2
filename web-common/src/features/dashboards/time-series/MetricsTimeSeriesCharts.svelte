@@ -46,6 +46,8 @@
   $: selectedMeasureNames = metricsExplorer?.selectedMeasureNames;
   $: interval = metricsExplorer?.selectedTimeRange?.interval;
 
+  $: forecastPeriod = parseInt($forecastStore);
+
   let totalsQuery: UseQueryStoreResult<V1MetricsViewTotalsResponse, Error>;
   $: if (
     metricsExplorer &&
@@ -88,7 +90,7 @@
         timeEnd: metricsExplorer.selectedTimeRange?.end,
         // Quick hack for now, API expects "day" instead of "1 day"
         timeGranularity: metricsExplorer.selectedTimeRange?.interval,
-        forecastPeriod: parseInt($forecastStore),
+        forecastPeriod: forecastPeriod,
       }
     );
   }
@@ -110,9 +112,8 @@
   //PREDICTION////
   ///////////////
   let predictedData = [];
-  let predictionPeriod = parseInt($forecastStore);
+  let predictionPeriod = forecastPeriod;
 
-  $: console.log($timeSeriesQuery?.data);
   // formattedData adjusts the data to account for Javascript's handling of timezones
   let formattedData;
   let formattedForecastData;
@@ -205,7 +206,15 @@
       TimeOffsetType.SUBTRACT
     );
 
-    endValue = getOffset(endValue, "PT3H", TimeOffsetType.ADD);
+    // Add forecast period to endValue
+    // Use a better way to do this
+    for (let i = 1; i <= forecastPeriod; i++) {
+      endValue = getOffset(
+        endValue,
+        TIME_GRAIN[metricsExplorer.selectedTimeRange?.interval].duration,
+        TimeOffsetType.ADD
+      );
+    }
 
     endValue = removeTimezoneOffset(endValue);
   }

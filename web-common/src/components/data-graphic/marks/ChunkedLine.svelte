@@ -152,7 +152,7 @@ Over time, we'll make this the default Line implementation, but it's not quite t
       />
     </WithTween>
     <!-- Upper Band -->
-    <!-- <WithTween
+    <WithTween
       value={lineFunction(yAccessor + "_upper")(
         delayedFilteredData.slice(-1 * predictionPeriod - 1)
       )}
@@ -172,10 +172,10 @@ Over time, we'll make this the default Line implementation, but it's not quite t
         fill="none"
         style="clip-path: url(#path-segments-{id}-pred)"
       />
-    </WithTween> -->
+    </WithTween>
 
     <!-- Lower Ban -->
-    <!-- <WithTween
+    <WithTween
       value={lineFunction(yAccessor + "_lower")(
         delayedFilteredData.slice(-1 * predictionPeriod - 1)
       )}
@@ -195,7 +195,7 @@ Over time, we'll make this the default Line implementation, but it's not quite t
         fill="none"
         style="clip-path: url(#path-segments-{id}-pred)"
       />
-    </WithTween> -->
+    </WithTween>
 
     <line
       x1={$xScale(delayedSegments.slice(-1)[0][0][xAccessor])}

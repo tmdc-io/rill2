@@ -48,7 +48,11 @@ export function computeSegments(lineData, defined, isNext = () => true) {
   const datumKeys = Object.keys(predictionSegment[0]);
 
   for (const key of datumKeys) {
-    if (key.includes("measure")) {
+    if (
+      key.includes("measure") &&
+      !key.includes("upper") &&
+      !key.includes("lower")
+    ) {
       predictionSegment[0][key + "_upper"] = predictionSegment[0][key];
       predictionSegment[0][key + "_lower"] = predictionSegment[0][key];
     }
