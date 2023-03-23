@@ -151,6 +151,51 @@ Over time, we'll make this the default Line implementation, but it's not quite t
         style="clip-path: url(#path-segments-{id}-pred)"
       />
     </WithTween>
+    <!-- Upper Band -->
+    <WithTween
+      value={lineFunction(yAccessor + "_upper")(
+        delayedFilteredData.slice(-1 * predictionPeriod - 1)
+      )}
+      tweenProps={{
+        duration,
+        interpolate: interpolatePath,
+        easing: cubicOut,
+      }}
+      let:output={dt}
+    >
+      <path
+        stroke-dasharray="3,1"
+        stroke-width={0.5}
+        stroke="#3498db"
+        d={dt}
+        id="segments-line"
+        fill="none"
+        style="clip-path: url(#path-segments-{id}-pred)"
+      />
+    </WithTween>
+
+    <!-- Lower Ban -->
+    <WithTween
+      value={lineFunction(yAccessor + "_lower")(
+        delayedFilteredData.slice(-1 * predictionPeriod - 1)
+      )}
+      tweenProps={{
+        duration,
+        interpolate: interpolatePath,
+        easing: cubicOut,
+      }}
+      let:output={dt}
+    >
+      <path
+        stroke-dasharray="3,1"
+        stroke-width={0.5}
+        stroke="#3498db"
+        d={dt}
+        id="segments-line"
+        fill="none"
+        style="clip-path: url(#path-segments-{id}-pred)"
+      />
+    </WithTween>
 
     <line
       x1={$xScale(delayedSegments.slice(-1)[0][0][xAccessor])}

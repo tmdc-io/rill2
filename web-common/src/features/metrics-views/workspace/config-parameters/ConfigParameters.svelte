@@ -5,6 +5,7 @@
   import type { MetricsInternalRepresentation } from "../../metrics-internal-store";
   import DefaultTimeRangeSelector from "./DefaultTimeRangeSelector.svelte";
   import DisplayNameInput from "./DisplayNameInput.svelte";
+  import ForecastPeriod from "./ForecastPeriod.svelte";
   import ModelSelector from "./ModelSelector.svelte";
   import QuickStartButton from "./QuickStartButton.svelte";
   import SmallestTimeGrainSelector from "./SmallestTimeGrainSelector.svelte";
@@ -33,6 +34,7 @@
     {#if timeColumn && timeColumnIsInModel}
       <SmallestTimeGrainSelector selectedModel={model} {metricsInternalRep} />
       <DefaultTimeRangeSelector selectedModel={model} {metricsInternalRep} />
+      <ForecastPeriod />
     {/if}
   </div>
   <div class="ml-auto">

@@ -42,3 +42,6 @@ export const appStore: Readable<AppStore> & typeof appStoreReducers = {
   subscribe,
   ...appStoreReducers,
 };
+
+// Keep as string for using forms input
+export const forecastStore = writable("3");

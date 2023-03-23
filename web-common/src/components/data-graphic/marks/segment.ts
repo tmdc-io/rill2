@@ -1,3 +1,6 @@
+import { forecastStore } from "@rilldata/web-local/lib/application-state-stores/app-store";
+import { get } from "svelte/store";
+
 /**
  * Helper function to compute the contiguous segments of the data
  * based on https://github.com/pbeshai/d3-line-chunked/blob/master/src/lineChunked.js
@@ -35,14 +38,25 @@ export function computeSegments(lineData, defined, isNext = () => true) {
     return segments;
   }, []);
 
-  const predictionPeriod = 3;
+  const predictionPeriodVal = get(forecastStore);
+  const predictionPeriod = parseInt(predictionPeriodVal);
   // Create a segment for predictions
   const endSegment = segments[segments.length - 1];
-  const split1 = endSegment.slice(0, endSegment.length - predictionPeriod);
-  const split2 = endSegment.slice(-1 * predictionPeriod - 1);
+  const lastSegment = endSegment.slice(0, endSegment.length - predictionPeriod);
+  const predictionSegment = endSegment.slice(-1 * predictionPeriod - 1);
 
-  segments[segments.length - 1] = split1;
-  segments.push(split2);
+  // Add initial upper and lower bands to split2
+  const datumKeys = Object.keys(predictionSegment[0]);
+
+  for (const key of datumKeys) {
+    if (key.includes("measure")) {
+      predictionSegment[0][key + "_upper"] = predictionSegment[0][key];
+      predictionSegment[0][key + "_lower"] = predictionSegment[0][key];
+    }
+  }
+
+  segments[segments.length - 1] = lastSegment;
+  segments.push(predictionSegment);
 
   return segments;
 }

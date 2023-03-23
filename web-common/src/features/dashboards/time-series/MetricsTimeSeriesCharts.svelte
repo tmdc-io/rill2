@@ -100,7 +100,7 @@
 
   $: if ($timeSeriesQuery?.data?.data) dataCopy = $timeSeriesQuery.data.data;
 
-  $: console.log(dataCopy, "dataCopy");
+  $: console.log($timeSeriesQuery?.data, "dataCopy");
 
   ////////////////
   //PREDICTION////
@@ -124,7 +124,8 @@
           TimeOffsetType.ADD
         ),
         measure_0: 3640000,
-        measure_0_upper: 3840000,
+        measure_0_upper: 3740000,
+        measure_0_lower: 3540000,
       },
       {
         ts: getOffset(
@@ -133,6 +134,8 @@
           TimeOffsetType.ADD
         ),
         measure_0: 3880000,
+        measure_0_upper: 4080000,
+        measure_0_lower: 3680000,
       },
       {
         ts: getOffset(
@@ -141,6 +144,8 @@
           TimeOffsetType.ADD
         ),
         measure_0: 3500000,
+        measure_0_upper: 3800000,
+        measure_0_lower: 3200000,
       },
     ];
 
