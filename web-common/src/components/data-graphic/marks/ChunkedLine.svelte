@@ -39,7 +39,9 @@ Over time, we'll make this the default Line implementation, but it's not quite t
 
   export let stopOpacity = 0.3;
   // FIXME – this is a different prop than elsewhere
-  export let color = "hsla(217,70%, 80%, .4)";
+  export let color = "hsla(217,70%, 80%, .6)";
+
+  export let predictionPeriod;
 
   const id = guidGenerator();
 
@@ -74,6 +76,7 @@ Over time, we'll make this the default Line implementation, but it's not quite t
   }
 
   $: segments = computeSegments(data, pathIsDefined(yAccessor));
+
   /** plot these as points */
   $: singletons = segments.filter((segment) => segment.length === 1);
 
@@ -126,7 +129,37 @@ Over time, we'll make this the default Line implementation, but it's not quite t
         style="clip-path: url(#path-segments-{id})"
       />
     </WithTween>
+    <!-- Add a prediction line -->
+    <WithTween
+      value={lineFunction(yAccessor)(
+        delayedFilteredData.slice(-1 * predictionPeriod - 1)
+      )}
+      tweenProps={{
+        duration,
+        interpolate: interpolatePath,
+        easing: cubicOut,
+      }}
+      let:output={dt}
+    >
+      <path
+        stroke-dasharray="3,1"
+        stroke-width={$lineThickness}
+        stroke="#2980b9"
+        d={dt}
+        id="segments-line"
+        fill="none"
+        style="clip-path: url(#path-segments-{id}-pred)"
+      />
+    </WithTween>
 
+    <line
+      x1={$xScale(delayedSegments.slice(-1)[0][0][xAccessor])}
+      x2={$xScale(delayedSegments.slice(-1)[0][0][xAccessor])}
+      y2={200}
+      stroke-width="1"
+      class="stroke-gray-400"
+      stroke-dasharray="2,1"
+    />
     <WithTween
       value={areaFunction(yAccessor)(delayedFilteredData)}
       tweenProps={{
@@ -143,14 +176,72 @@ Over time, we'll make this the default Line implementation, but it's not quite t
       />
     </WithTween>
 
+    <!-- Add a prection area -->
+    <WithTween
+      value={areaFunction(yAccessor)(
+        delayedFilteredData.slice(-1 * predictionPeriod - 1)
+      )}
+      tweenProps={{
+        duration,
+        interpolate: interpolatePath,
+        easing: cubicOut,
+      }}
+      let:output={at}
+    >
+      <path
+        d={at}
+        fill="url(#gradient-{id}-pred)"
+        style="clip-path: url(#path-segments-{id}-pred)"
+      />
+    </WithTween>
+
     <!-- clip rects for segments -->
     <defs>
       <linearGradient id="gradient-{id}" x1="0" x2="0" y1="0" y2="1">
         <stop offset="5%" stop-color={color} />
         <stop offset="95%" stop-color={color} stop-opacity={stopOpacity} />
       </linearGradient>
+      <linearGradient id="gradient-{id}-pred" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="5%" stop-color="hsla(220,70%, 80%, .25)" />
+        <stop
+          offset="95%"
+          stop-color="hsla(220,70%, 80%, .25)"
+          stop-opacity={stopOpacity}
+        />
+      </linearGradient>
       <clipPath id="path-segments-{id}">
-        {#each delayedSegments as segment (segment[0][xAccessor])}
+        {#each delayedSegments.slice(0, -1) as segment (segment[0][xAccessor])}
+          {@const x = $xScale(segment[0][xAccessor])}
+          {@const width =
+            $xScale(segment.at(-1)[xAccessor]) - $xScale(segment[0][xAccessor])}
+          <WithTween
+            initialValue={{
+              x: x - width / 2,
+              width: width * 2,
+            }}
+            value={{
+              x,
+              width,
+            }}
+            tweenProps={{
+              duration,
+              easing: cubicOut,
+            }}
+            let:output
+          >
+            <rect
+              x={output.x}
+              y={0}
+              height={$yScale.range()[0]}
+              width={output.width}
+            />
+          </WithTween>
+        {/each}
+      </clipPath>
+
+      <!-- clip rects for predections -->
+      <clipPath id="path-segments-{id}-pred">
+        {#each delayedSegments.slice(-1) as segment (segment[0][xAccessor])}
           {@const x = $xScale(segment[0][xAccessor])}
           {@const width =
             $xScale(segment.at(-1)[xAccessor]) - $xScale(segment[0][xAccessor])}

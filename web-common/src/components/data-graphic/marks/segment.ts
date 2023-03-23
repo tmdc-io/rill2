@@ -35,6 +35,15 @@ export function computeSegments(lineData, defined, isNext = () => true) {
     return segments;
   }, []);
 
+  const predictionPeriod = 3;
+  // Create a segment for predictions
+  const endSegment = segments[segments.length - 1];
+  const split1 = endSegment.slice(0, endSegment.length - predictionPeriod);
+  const split2 = endSegment.slice(-1 * predictionPeriod - 1);
+
+  segments[segments.length - 1] = split1;
+  segments.push(split2);
+
   return segments;
 }
 

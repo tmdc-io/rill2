@@ -39,6 +39,9 @@
   export let scrubbing = false;
   export let scrubEnd = undefined;
 
+  // hackathon
+  export let predictionPeriod;
+
   $: [xExtentMin, xExtentMax] = extent(data, (d) => d[xAccessor]);
   $: [yExtentMin, yExtentMax] = extent(data, (d) => d[yAccessor]);
 
@@ -127,6 +130,7 @@
         {xAccessor}
         {yAccessor}
         key={$timeRangeKey}
+        {predictionPeriod}
       />
     {/key}
     <line

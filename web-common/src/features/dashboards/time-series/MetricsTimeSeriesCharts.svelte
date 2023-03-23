@@ -100,6 +100,14 @@
 
   $: if ($timeSeriesQuery?.data?.data) dataCopy = $timeSeriesQuery.data.data;
 
+  $: console.log(dataCopy, "dataCopy");
+
+  ////////////////
+  //PREDICTION////
+  ///////////////
+  let predictedData;
+  let predictionPeriod = 3;
+
   // formattedData adjusts the data to account for Javascript's handling of timezones
   let formattedData;
   $: if (dataCopy && dataCopy?.length) {
@@ -107,6 +115,39 @@
       di = { ts: di.ts, bin: di.bin, ...di.records };
       return di;
     });
+
+    predictedData = [
+      {
+        ts: getOffset(
+          formattedData[formattedData.length - 1].ts,
+          "PT1H",
+          TimeOffsetType.ADD
+        ),
+        measure_0: 3640000,
+        measure_0_upper: 3840000,
+      },
+      {
+        ts: getOffset(
+          formattedData[formattedData.length - 1].ts,
+          "PT2H",
+          TimeOffsetType.ADD
+        ),
+        measure_0: 3880000,
+      },
+      {
+        ts: getOffset(
+          formattedData[formattedData.length - 1].ts,
+          "PT3H",
+          TimeOffsetType.ADD
+        ),
+        measure_0: 3500000,
+      },
+    ];
+
+    // Add predicted data to the end of the data array
+    formattedData = formattedData.concat(predictedData);
+
+    console.log(formattedData);
   }
 
   let mouseoverValue = undefined;
@@ -132,6 +173,8 @@
       TIME_GRAIN[metricsExplorer?.selectedTimeRange?.interval].duration,
       TimeOffsetType.SUBTRACT
     );
+
+    endValue = getOffset(endValue, "PT3H", TimeOffsetType.ADD);
 
     endValue = removeTimezoneOffset(endValue);
   }
@@ -193,6 +236,7 @@
               data={formattedData}
               xAccessor="ts"
               yAccessor={measure.name}
+              {predictionPeriod}
               xMin={startValue}
               xMax={endValue}
               start={startValue}
