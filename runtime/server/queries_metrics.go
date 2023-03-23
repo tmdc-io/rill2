@@ -32,7 +32,7 @@ func (s *Server) MetricsViewToplist(ctx context.Context, req *runtimev1.MetricsV
 	}
 
 	mv := cat.GetMetricsView()
-	policy, err := s.resolvedPolicy(mv.Policies, claims.GetEmail(), claims.GetUserGroup())
+	policy, err := s.resolvedPolicy(mv.Policies, claims.GetEmail(), "")
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (s *Server) MetricsViewTimeSeries(ctx context.Context, req *runtimev1.Metri
 	}
 
 	mv := cat.GetMetricsView()
-	policy, err := s.resolvedPolicy(mv.Policies, claims.GetEmail(), claims.GetUserGroup())
+	policy, err := s.resolvedPolicy(mv.Policies, claims.GetEmail(), "")
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (s *Server) MetricsViewTotals(ctx context.Context, req *runtimev1.MetricsVi
 	}
 
 	mv := cat.GetMetricsView()
-	policy, err := s.resolvedPolicy(mv.Policies, claims.GetEmail(), claims.GetUserGroup())
+	policy, err := s.resolvedPolicy(mv.Policies, claims.GetEmail(), "")
 	if err != nil {
 		return nil, err
 	}

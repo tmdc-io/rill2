@@ -15,7 +15,7 @@ type Claims interface {
 	// Email returns the email of the user
 	GetEmail() string
 	// UserGroup returns the group user belongs to
-	GetUserGroup() string
+	GetUserGroups() []string
 }
 
 // jwtClaims implements Claims and resolve permissions based on a JWT payload.
@@ -23,8 +23,8 @@ type jwtClaims struct {
 	jwt.RegisteredClaims
 	System    []Permission            `json:"sys,omitempty"`
 	Instances map[string][]Permission `json:"ins,omitempty"`
-	Email     string                  `json:"string"`
-	UserGroup string                  `json:"user_group"`
+	Email     string                  `json:"email"`
+	Groups    []string                `json:"group_names"`
 }
 
 func (c *jwtClaims) Subject() string {
@@ -53,8 +53,8 @@ func (c *jwtClaims) GetEmail() string {
 	return c.Email
 }
 
-func (c *jwtClaims) GetUserGroup() string {
-	return c.UserGroup
+func (c *jwtClaims) GetUserGroups() []string {
+	return c.Groups
 }
 
 // openClaims implements Claims and allows all actions.
@@ -74,11 +74,11 @@ func (c openClaims) CanInstance(instanceID string, p Permission) bool {
 }
 
 func (c openClaims) GetEmail() string {
-	return "anshul"
+	return ""
 }
 
-func (c openClaims) GetUserGroup() string {
-	return ""
+func (c openClaims) GetUserGroups() []string {
+	return nil
 }
 
 // anonClaims imeplements Claims with no permissions.
@@ -101,6 +101,6 @@ func (c anonClaims) GetEmail() string {
 	return ""
 }
 
-func (c anonClaims) GetUserGroup() string {
-	return ""
+func (c anonClaims) GetUserGroup() []string {
+	return nil
 }
