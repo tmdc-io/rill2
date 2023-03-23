@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/rilldata/rill/runtime/pkg/pbutil"
+	"github.com/rilldata/rill/runtime/queries/forecast/holtwinters_v2"
+	"log"
 	"time"
 
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
@@ -95,7 +98,7 @@ func (q *MetricsViewTimeSeries) Resolve(ctx context.Context, rt *runtime.Runtime
 
 	r := tsq.Result
 
-	fResults := getForcasted(r.Results)
+	fResults := getForecasted(&q.TimeGranularity, r.Results, 5)
 	q.Result = &runtimev1.MetricsViewTimeSeriesResponse{
 		Meta:         r.Meta,
 		Data:         r.Results,
@@ -105,18 +108,72 @@ func (q *MetricsViewTimeSeries) Resolve(ctx context.Context, rt *runtime.Runtime
 	return nil
 }
 
-func getForcasted(result []*runtimev1.TimeSeriesValue) []*runtimev1.TimeSeriesValue {
-	var forcastedResult []*runtimev1.TimeSeriesValue
-	for _, r := range result {
-		ts := r.Ts.AsTime().Add(time.Hour * 24)
-		forcastedResult = append(forcastedResult, &runtimev1.TimeSeriesValue{
-			Ts:      timestamppb.New(ts),
-			Bin:     r.Bin,
-			Records: r.Records,
+func daysIn(m time.Month, year int) int {
+	return time.Date(year, m+1, 0, 0, 0, 0, 0, time.UTC).Day()
+}
+
+func toTimeGrainNs(specifier runtimev1.TimeGrain, ts time.Time) int64 {
+	ts.Month()
+
+	switch specifier {
+	case runtimev1.TimeGrain_TIME_GRAIN_MILLISECOND:
+		return time.Millisecond.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_SECOND:
+		return time.Second.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_MINUTE:
+		return time.Minute.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_HOUR:
+		return time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_DAY:
+		return 24 * time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_WEEK:
+		return 24 * 7 * time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_MONTH:
+		return int64(daysIn(ts.Month(), ts.Year())) * 24 * time.Hour.Nanoseconds()
+	case runtimev1.TimeGrain_TIME_GRAIN_YEAR:
+		return int64(daysIn(ts.Month(), ts.Year())) * 24 * time.Hour.Nanoseconds()
+	}
+	panic(fmt.Errorf("unconvertable time grain specifier: %v", specifier))
+}
+
+func getForecasted(t *runtimev1.TimeGrain, results []*runtimev1.TimeSeriesValue, timePeriod int) []*runtimev1.TimeSeriesValue {
+	nForecastedValues := timePeriod
+	var originalTsValues = make(map[string][]float64)
+	for _, r := range results {
+		for k, v := range r.Records.Fields {
+			if originalTsValues[k] == nil {
+				originalTsValues[k] = make([]float64, 0)
+			}
+			originalTsValues[k] = append(originalTsValues[k], v.GetNumberValue())
+		}
+	}
+	var forecastedTsValues = make(map[string][]float64)
+	for k, v := range originalTsValues {
+		forecasted, err := holtwinters_v2.PredictAdditive(v, 2, 0.5, 0.4, 0.6, nForecastedValues)
+		if err != nil {
+			log.Fatal(err)
+		}
+		forecastedTsValues[k] = forecasted
+	}
+	var forecastedResult []*runtimev1.TimeSeriesValue
+
+	result := results[len(results)-1]
+	ts := result.Ts
+	for i := 0; i < nForecastedValues; i++ {
+		duration := toTimeGrainNs(*t, ts.AsTime())
+		ts = timestamppb.New(ts.AsTime().Add(time.Duration(duration)))
+		fields := make(map[string]any)
+		for k, v := range forecastedTsValues {
+			fields[k] = v[i + len(originalTsValues[k])]
+		}
+		toStruct, _ := pbutil.ToStruct(fields)
+		forecastedResult = append(forecastedResult, &runtimev1.TimeSeriesValue{
+			Ts:  ts,
+			Bin: result.Bin,
+			Records: toStruct,
 		})
 	}
-
-	return forcastedResult
+	return forecastedResult
 }
 
 func toMeasures(measures []*runtimev1.MetricsView_Measure, measureNames []string) ([]*runtimev1.ColumnTimeSeriesRequest_BasicMeasure, error) {
