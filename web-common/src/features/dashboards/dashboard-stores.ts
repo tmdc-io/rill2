@@ -25,8 +25,12 @@ export interface MetricsExplorerEntity {
   selectedMeasureNames: Array<string>;
   // This array controls which measures are visible in
   // explorer on the client.
-  // FIXME should this be consolidated with selectedMeasureNames
+  // FIXME / REVIEW QUESTION: should this be consolidated with selectedMeasureNames?
   visibleMeasures: boolean[];
+
+  // This array controls which measures are visible in
+  // explorer on the client.
+  visibleDimensions: boolean[];
   // this is used to show leaderboard values
   leaderboardMeasureName: string;
   filters: V1MetricsViewFilter;
@@ -95,6 +99,7 @@ const metricViewReducers = {
         name,
         selectedMeasureNames: [],
         visibleMeasures: [],
+        visibleDimensions: [],
         leaderboardMeasureName: "",
         filters: {},
         dimensionFilterExcludeMode: includeExcludeModeFromFilters(
@@ -129,6 +134,9 @@ const metricViewReducers = {
         metricsExplorer.visibleMeasures = metricsView.measures.map(
           (measure) => true
         );
+        metricsExplorer.visibleDimensions = metricsView.dimensions.map(
+          (measure) => true
+        );
         console.log(
           "metricsExplorer.visibleMeasures sync",
           metricsExplorer.visibleMeasures
@@ -143,6 +151,7 @@ const metricViewReducers = {
             (measure) => measure.name
           ),
           visibleMeasures: metricsView.measures.map((measure) => true),
+          visibleDimensions: metricsView.dimensions.map((dim) => true),
           leaderboardMeasureName: metricsView.measures[0]?.name,
           filters: {
             include: [],
@@ -175,6 +184,26 @@ const metricViewReducers = {
   setAllMeasuresNotVisible(name: string) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
       metricsExplorer.visibleMeasures = metricsExplorer.visibleMeasures.map(
+        (_) => false
+      );
+    });
+  },
+
+  // Updates the bitmask that sets the client-side visibility
+  // of dimensions in the dashboard.
+  toggleDimensionVisibility(name: string, measureIndex: number) {
+    updateMetricsExplorerByName(name, (metricsExplorer) => {
+      metricsExplorer.visibleDimensions = metricsExplorer.visibleDimensions.map(
+        (x, i) => (i === measureIndex ? !x : x)
+      );
+    });
+  },
+
+  // Updates the bitmask that sets the client-side visibility
+  // of dimensions in the dashboard.
+  setAllDimensionsNotVisible(name: string) {
+    updateMetricsExplorerByName(name, (metricsExplorer) => {
+      metricsExplorer.visibleDimensions = metricsExplorer.visibleDimensions.map(
         (_) => false
       );
     });
