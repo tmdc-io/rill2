@@ -34,15 +34,27 @@ are details left to the consumer of the component; this component should remain 
 
   const dispatch = createEventDispatcher();
 
-  let active = false;
+  export let active = false;
+
+  // $: console.log("new selectedValues", selectedValues);
+  // $: console.log("Removable list chip active", active);
+
+  const closeMenu = () => {
+    console.log("CLOSE MENU");
+    // toggleFloatingElement();
+    active = false;
+  };
+
+  const toggleMenu = () => {
+    console.log("TOGGLE MENU");
+    // toggleFloatingElement();
+    active = !active;
+  };
+
+  // let toggleFloatingElement;
 </script>
 
-<WithTogglableFloatingElement
-  let:toggleFloatingElement
-  bind:active
-  distance={8}
-  alignment="start"
->
+<WithTogglableFloatingElement bind:active distance={8} alignment="start">
   <Tooltip
     location="bottom"
     alignment="start"
@@ -52,7 +64,7 @@ are details left to the consumer of the component; this component should remain 
   >
     <Chip
       removable
-      on:click={toggleFloatingElement}
+      on:click={toggleMenu}
       on:remove={() => dispatch("remove")}
       {active}
       {...colors}
@@ -88,8 +100,8 @@ are details left to the consumer of the component; this component should remain 
   <RemovableListMenu
     {excludeMode}
     slot="floating-element"
-    on:escape={toggleFloatingElement}
-    on:click-outside={toggleFloatingElement}
+    on:escape={closeMenu}
+    on:click-outside={closeMenu}
     on:apply
     on:search
     on:toggle

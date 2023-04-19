@@ -5,9 +5,9 @@ The main feature-set component for dashboard filters
   import {
     Chip,
     ChipContainer,
-    RemovableListChip,
+    // RemovableListChip,
   } from "@rilldata/web-common/components/chip";
-  import { defaultChipColors } from "@rilldata/web-common/components/chip/chip-types";
+  // import { defaultChipColors } from "@rilldata/web-common/components/chip/chip-types";
   import Filter from "@rilldata/web-common/components/icons/Filter.svelte";
   import FilterRemove from "@rilldata/web-common/components/icons/FilterRemove.svelte";
   import { cancelDashboardQueries } from "@rilldata/web-common/features/dashboards/dashboard-queries";
@@ -21,7 +21,6 @@ The main feature-set component for dashboard filters
     V1MetricsViewFilter,
   } from "@rilldata/web-common/runtime-client";
   import { createQueryServiceMetricsViewToplist } from "@rilldata/web-common/runtime-client";
-  import { getMapFromArray } from "@rilldata/web-local/lib/util/arrayUtils";
   import { useQueryClient } from "@tanstack/svelte-query";
   import { flip } from "svelte/animate";
   import { fly } from "svelte/transition";
@@ -30,7 +29,8 @@ The main feature-set component for dashboard filters
     MetricsExplorerEntity,
     metricsExplorerStore,
   } from "../dashboard-stores";
-  import { getDisplayName } from "./getDisplayName";
+  import ConnectedFilterChip from "./ConnectedFilterChip.svelte";
+  import { afterUpdate } from "svelte";
 
   export let metricViewName;
 
@@ -53,14 +53,14 @@ The main feature-set component for dashboard filters
   let dimensions: Array<MetricsViewDimension>;
   $: dimensions = $metaQuery.data?.dimensions;
 
-  function clearFilterForDimension(dimensionId, include: boolean) {
-    cancelDashboardQueries(queryClient, metricViewName);
-    metricsExplorerStore.clearFilterForDimension(
-      metricViewName,
-      dimensionId,
-      include
-    );
-  }
+  // function clearFilterForDimension(dimensionId, include: boolean) {
+  //   cancelDashboardQueries(queryClient, metricViewName);
+  //   metricsExplorerStore.clearFilterForDimension(
+  //     metricViewName,
+  //     dimensionId,
+  //     include
+  //   );
+  // }
 
   function isFiltered(filters: V1MetricsViewFilter): boolean {
     if (!filters) return false;
@@ -121,10 +121,10 @@ The main feature-set component for dashboard filters
     }
   }
 
-  function setActiveDimension(name, value) {
-    activeDimensionName = name;
-    searchText = value;
-  }
+  // function setActiveDimension(name, value) {
+  //   activeDimensionName = name;
+  //   searchText = value;
+  // }
 
   $: if (!$topListQuery?.isFetching && searchText != "") {
     const topListData = $topListQuery?.data?.data ?? [];
@@ -142,53 +142,73 @@ The main feature-set component for dashboard filters
   }
 
   /** prune the values and prepare for templating */
-  let currentDimensionFilters = [];
-  $: if (includeValues && excludeValues && dimensions) {
-    const dimensionIdMap = getMapFromArray(
-      dimensions,
-      (dimension) => dimension.name
-    );
-    const currentDimensionIncludeFilters = includeValues.map(
-      (dimensionValues) => ({
-        name: dimensionValues.name,
-        label: getDisplayName(dimensionIdMap.get(dimensionValues.name)),
-        selectedValues: dimensionValues.in,
-        filterType: "include",
-      })
-    );
-    const currentDimensionExcludeFilters = excludeValues.map(
-      (dimensionValues) => ({
-        name: dimensionValues.name,
-        label: getDisplayName(dimensionIdMap.get(dimensionValues.name)),
-        selectedValues: dimensionValues.in,
-        filterType: "exclude",
-      })
-    );
-    currentDimensionFilters = [
-      ...currentDimensionIncludeFilters,
-      ...currentDimensionExcludeFilters,
-    ];
-    // sort based on name to make sure toggling include/exclude is not jarring
-    currentDimensionFilters.sort((a, b) => (a.name > b.name ? 1 : -1));
-  }
+  // let currentDimensionFilters = [];
+  // $: if (includeValues && excludeValues && dimensions) {
+  //   const dimensionIdMap = getMapFromArray(
+  //     dimensions,
+  //     (dimension) => dimension.name
+  //   );
+  //   const currentDimensionIncludeFilters = includeValues.map(
+  //     (dimensionValues) => ({
+  //       name: dimensionValues.name,
+  //       label: getDisplayName(dimensionIdMap.get(dimensionValues.name)),
+  //       selectedValues: dimensionValues.in,
+  //       filterType: "include",
+  //     })
+  //   );
+  //   const currentDimensionExcludeFilters = excludeValues.map(
+  //     (dimensionValues) => ({
+  //       name: dimensionValues.name,
+  //       label: getDisplayName(dimensionIdMap.get(dimensionValues.name)),
+  //       selectedValues: dimensionValues.in,
+  //       filterType: "exclude",
+  //     })
+  //   );
+  //   currentDimensionFilters = [
+  //     ...currentDimensionIncludeFilters,
+  //     ...currentDimensionExcludeFilters,
+  //   ];
+  //   // sort based on name to make sure toggling include/exclude is not jarring
+  //   currentDimensionFilters.sort((a, b) => (a.name > b.name ? 1 : -1));
+  //   // console.log("currentDimensionFilters", currentDimensionFilters);
+  //   // console.log(
+  //   //   "currentDimensionIncludeFilters",
+  //   //   currentDimensionIncludeFilters
+  //   // );
+  //   // console.log(
+  //   //   "currentDimensionExcludeFilters",
+  //   //   currentDimensionExcludeFilters
+  //   // );
+  // }
+  $: includedDimNames = includeValues?.map((d) => d.name) ?? [];
+  $: excludedDimNames = excludeValues?.map((d) => d.name) ?? [];
 
-  function toggleDimensionValue(event, item) {
-    cancelDashboardQueries(queryClient, metricViewName);
-    metricsExplorerStore.toggleFilter(metricViewName, item.name, event.detail);
-  }
+  $: currentDimensionFilters = [...includedDimNames, ...excludedDimNames];
 
-  function toggleFilterMode(dimensionName) {
-    cancelDashboardQueries(queryClient, metricViewName);
-    metricsExplorerStore.toggleFilterMode(metricViewName, dimensionName);
-  }
+  // sort based on name to make sure toggling include/exclude is not jarring
+  $: currentDimensionFilters.sort((a, b) => (a > b ? 1 : -1));
 
-  const excludeChipColors = {
-    bgBaseClass: "bg-gray-100 dark:bg-gray-700",
-    bgHoverClass: "bg-gray-200 dark:bg-gray-600",
-    textClass: "ui-copy",
-    bgActiveClass: "bg-gray-200 dark:bg-gray-600",
-    outlineClass: "outline-gray-400 dark:outline-gray-500",
-  };
+  // function toggleDimensionValue(event, item) {
+  //   cancelDashboardQueries(queryClient, metricViewName);
+  //   metricsExplorerStore.toggleFilter(metricViewName, item.name, event.detail);
+  // }
+
+  // function toggleFilterMode(dimensionName) {
+  //   cancelDashboardQueries(queryClient, metricViewName);
+  //   metricsExplorerStore.toggleFilterMode(metricViewName, dimensionName);
+  // }
+
+  // const excludeChipColors = {
+  //   bgBaseClass: "bg-gray-100 dark:bg-gray-700",
+  //   bgHoverClass: "bg-gray-200 dark:bg-gray-600",
+  //   textClass: "ui-copy",
+  //   bgActiveClass: "bg-gray-200 dark:bg-gray-600",
+  //   outlineClass: "outline-gray-400 dark:outline-gray-500",
+  // };
+
+  $: console.log("metricViewName OUTER", metricViewName);
+
+  afterUpdate(() => console.log("UPDATE Filters.svelte"));
 </script>
 
 <section
@@ -207,10 +227,13 @@ The main feature-set component for dashboard filters
   </div>
   {#if currentDimensionFilters?.length}
     <ChipContainer>
-      {#each currentDimensionFilters as { name, label, selectedValues, filterType } (name)}
-        {@const isInclude = filterType === "include"}
+      <!-- {#each currentDimensionFilters as { name, label, selectedValues, filterType } (name)} -->
+      <!-- {@const isInclude = filterType === "include"} -->
+
+      {#each currentDimensionFilters as name (name)}
         <div animate:flip={{ duration: 200 }}>
-          <RemovableListChip
+          <ConnectedFilterChip dimensionName={name} {metricViewName} />
+          <!-- <RemovableListChip
             on:toggle={() => toggleFilterMode(name)}
             on:remove={() =>
               clearFilterForDimension(name, isInclude ? true : false)}
@@ -228,7 +251,7 @@ The main feature-set component for dashboard filters
             <svelte:fragment slot="body-tooltip-content">
               Click to edit the the filters in this dimension
             </svelte:fragment>
-          </RemovableListChip>
+          </RemovableListChip> -->
         </div>
       {/each}
       <!-- if filters are present, place a chip at the end of the flex container 

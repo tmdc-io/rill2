@@ -138,6 +138,7 @@
   use:clickOutside={[
     [$menuTrigger],
     () => {
+      console.log("dispatch CLICK OUTSIDE");
       dispatch("click-outside");
     },
   ]}

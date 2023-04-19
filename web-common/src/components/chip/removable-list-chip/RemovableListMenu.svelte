@@ -39,12 +39,17 @@
     (v) => !valuesToDisplay.includes(v)
   ).length;
 
+  // $: console.log("candidateValues", candidateValues);
+
   function toggleValue(value) {
+    console.log("dispatch toggleVal", value.slice(0, 10));
     dispatch("apply", value);
 
     if (!candidateValues.includes(value)) {
       candidateValues = [...candidateValues, value];
     }
+
+    // console.log("candidateValues inner", candidateValues);
   }
 </script>
 

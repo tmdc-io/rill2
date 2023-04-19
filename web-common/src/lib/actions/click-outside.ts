@@ -1,5 +1,6 @@
 export function clickOutside(node: Node, [elementsToIgnore, cb]) {
   function handleClick(event) {
+    console.log("HANDLING CLICK");
     if (
       !node.contains(document.activeElement) &&
       !node.contains(event.target) &&
@@ -11,7 +12,7 @@ export function clickOutside(node: Node, [elementsToIgnore, cb]) {
     }
   }
   document.addEventListener("click", handleClick);
-  document.addEventListener("focusin", handleClick);
+  // document.addEventListener("focusin", handleClick);
   return {
     destroy() {
       document.removeEventListener("click", handleClick);
