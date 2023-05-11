@@ -161,40 +161,40 @@
     new Date($dashboardStore?.selectedTimeRange?.end)
   );
 
-  function onSelectTimeRange(name: TimeRangeType, start: Date, end: Date) {
-    baseTimeRange = {
-      name,
-      start: new Date(start),
-      end: new Date(end),
-    };
-    makeTimeSeriesTimeRangeAndUpdateAppState(
-      baseTimeRange,
-      $dashboardStore.selectedTimeRange?.interval,
-      // reset the comparison range
-      {}
-    );
-  }
+  // function onSelectTimeRange(name: TimeRangeType, start: Date, end: Date) {
+  //   baseTimeRange = {
+  //     name,
+  //     start: new Date(start),
+  //     end: new Date(end),
+  //   };
+  //   makeTimeSeriesTimeRangeAndUpdateAppState(
+  //     baseTimeRange,
+  //     $dashboardStore.selectedTimeRange?.interval,
+  //     // reset the comparison range
+  //     {}
+  //   );
+  // }
 
-  function onSelectTimeGrain(timeGrain: V1TimeGrain) {
-    makeTimeSeriesTimeRangeAndUpdateAppState(
-      baseTimeRange,
-      timeGrain,
-      $dashboardStore?.selectedComparisonTimeRange
-    );
-  }
+  // function onSelectTimeGrain(timeGrain: V1TimeGrain) {
+  //   makeTimeSeriesTimeRangeAndUpdateAppState(
+  //     baseTimeRange,
+  //     timeGrain,
+  //     $dashboardStore?.selectedComparisonTimeRange
+  //   );
+  // }
 
-  function onSelectComparisonRange(
-    name: TimeComparisonOption,
-    start: Date,
-    end: Date
-  ) {
-    metricsExplorerStore.setSelectedComparisonRange(metricViewName, {
-      name,
-      start,
-      end,
-    });
-    metricsExplorerStore.toggleComparison(metricViewName, true);
-  }
+  // function onSelectComparisonRange(
+  //   name: TimeComparisonOption,
+  //   start: Date,
+  //   end: Date
+  // ) {
+  //   metricsExplorerStore.setSelectedComparisonRange(metricViewName, {
+  //     name,
+  //     start,
+  //     end,
+  //   });
+  //   metricsExplorerStore.toggleComparison(metricViewName, true);
+  // }
 
   function makeTimeSeriesTimeRangeAndUpdateAppState(
     timeRange: TimeRange,
@@ -284,36 +284,38 @@
     }
   }
 
-  let isComparisonRangeAvailable;
-  let availableComparisons;
+  // let isComparisonRangeAvailable;
+  // let availableComparisons;
 
-  $: if (
-    allTimeRange?.start &&
-    $dashboardStore?.selectedTimeRange?.start &&
-    hasTimeSeries
-  ) {
-    isComparisonRangeAvailable = isRangeInsideOther(
-      allTimeRange.start,
-      allTimeRange.end,
-      $dashboardStore?.selectedComparisonTimeRange?.start,
-      $dashboardStore?.selectedComparisonTimeRange?.end
-    );
+  // $: if (
+  //   allTimeRange?.start &&
+  //   $dashboardStore?.selectedTimeRange?.start &&
+  //   hasTimeSeries
+  // ) {
+  //   isComparisonRangeAvailable = isRangeInsideOther(
+  //     allTimeRange.start,
+  //     allTimeRange.end,
+  //     $dashboardStore?.selectedComparisonTimeRange?.start,
+  //     $dashboardStore?.selectedComparisonTimeRange?.end
+  //   );
 
-    availableComparisons = getAvailableComparisonsForTimeRange(
-      allTimeRange.start,
-      allTimeRange.end,
-      $dashboardStore?.selectedTimeRange?.start,
-      $dashboardStore?.selectedTimeRange?.end,
-      [...Object.values(TimeComparisonOption)],
-      [
-        $dashboardStore?.selectedComparisonTimeRange
-          ?.name as TimeComparisonOption,
-      ]
-    );
-  }
+  //   availableComparisons = getAvailableComparisonsForTimeRange(
+  //     allTimeRange.start,
+  //     allTimeRange.end,
+  //     $dashboardStore?.selectedTimeRange?.start,
+  //     $dashboardStore?.selectedTimeRange?.end,
+  //     [...Object.values(TimeComparisonOption)],
+  //     [
+  //       $dashboardStore?.selectedComparisonTimeRange
+  //         ?.name as TimeComparisonOption,
+  //     ]
+  //   );
+  // }
 </script>
 
-<div class="flex flex-row items-center gap-x-1">
+<div>time controls here</div>
+
+<!-- <div class="flex flex-row items-center gap-x-1">
   {#if !hasTimeSeries}
     <NoTimeDimensionCTA
       {metricViewName}
@@ -352,4 +354,4 @@
       {minTimeGrain}
     />
   {/if}
-</div>
+</div> -->

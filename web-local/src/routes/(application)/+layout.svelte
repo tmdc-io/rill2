@@ -4,6 +4,7 @@
   import { RuntimeUrl } from "@rilldata/web-local/lib/application-state-stores/initialize-node-store-contexts";
   import { QueryClientProvider } from "@tanstack/svelte-query";
   import { createQueryClient } from "../../lib/svelte-query/globalQueryClient";
+  import MetricsTimeSeriesCharts from "@rilldata/web-common/features/dashboards/time-series/MetricsTimeSeriesCharts.svelte";
 
   const queryClient = createQueryClient();
 </script>

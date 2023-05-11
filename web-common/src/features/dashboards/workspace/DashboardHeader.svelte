@@ -51,49 +51,12 @@
 <section class="w-full flex flex-col" id="header">
   <!-- top row: title and call to action -->
   <!-- Rill Local includes the title, Rill Cloud does not -->
-  {#if hasTitle}
-    <!-- FIXME: adding an -mb-3 fixes the spacing issue incurred by changes to the header
-    to accommodate the cloud dashboard. We should go back and reconcile these headers so we don't need
-  to do this. -->
-    <div
-      class="flex items-center justify-between -mb-3 w-full pl-1 pr-4"
-      style:height="var(--header-height)"
-    >
-      <!-- title element -->
-      <h1 style:line-height="1.1" style:margin-top="-1px">
-        <div class="ui-copy-dashboard-header">
-          {displayName || metricViewName}
-        </div>
-      </h1>
-      <!-- top right CTAs -->
-      {#if isEditableDashboard}
-        <PanelCTA side="right">
-          <Tooltip distance={8}>
-            <Button
-              on:click={() => viewMetrics(metricViewName)}
-              type="secondary"
-            >
-              Edit Metrics <MetricsIcon size="16px" />
-            </Button>
-            <TooltipContent slot="tooltip-content">
-              Edit this dashboard's metrics & settings
-            </TooltipContent>
-          </Tooltip>
-          <Tooltip distance={8}>
-            <Button on:click={deployModal} type="primary">Deploy</Button>
-            <TooltipContent slot="tooltip-content">
-              Deploy this dashboard to Rill Cloud
-            </TooltipContent>
-          </Tooltip>
-        </PanelCTA>
-      {/if}
-    </div>
-  {/if}
+
   <!-- bottom row -->
   <div class="-ml-3 p-1 py-2 space-y-2">
     <TimeControls {metricViewName} />
-    {#key metricViewName}
+    <!-- {#key metricViewName}
       <Filters {metricViewName} />
-    {/key}
+    {/key} -->
   </div>
 </section>

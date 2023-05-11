@@ -17,6 +17,7 @@
   import MetricsTimeSeriesCharts from "../time-series/MetricsTimeSeriesCharts.svelte";
   import DashboardContainer from "./DashboardContainer.svelte";
   import DashboardHeader from "./DashboardHeader.svelte";
+  import Button from "@rilldata/web-common/components/button/Button.svelte";
 
   export let metricViewName: string;
   export let hasTitle: boolean;
@@ -63,10 +64,21 @@
   $: hasTimeSeries = $metricTimeSeries.data;
 </script>
 
+<MetricsTimeSeriesCharts />
+<Button
+  on:click={() =>
+    metricsExplorerStore.toggleComparison("ad_bids_dashboard", true)}
+  >on
+</Button>
+<Button
+  on:click={() =>
+    metricsExplorerStore.toggleComparison("ad_bids_dashboard", false)}
+  >off
+</Button>
 <DashboardContainer bind:exploreContainerWidth {leftMargin}>
   <DashboardHeader {hasTitle} {metricViewName} slot="header" />
 
-  <svelte:fragment slot="metrics">
+  <!-- <svelte:fragment slot="metrics">
     {#key metricViewName}
       {#if hasTimeSeries}
         <MetricsTimeSeriesCharts
@@ -88,5 +100,5 @@
     {:else}
       <LeaderboardDisplay {metricViewName} />
     {/if}
-  </svelte:fragment>
+  </svelte:fragment> -->
 </DashboardContainer>
