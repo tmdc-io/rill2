@@ -36,6 +36,7 @@
   } from "@rilldata/web-common/runtime-client";
   import type { CreateQueryResult } from "@tanstack/svelte-query";
   import { useQueryClient } from "@tanstack/svelte-query";
+  import { get } from "svelte/store";
   import { runtime } from "../../../runtime-client/runtime-store";
   import { metricsExplorerStore, useDashboardStore } from "../dashboard-stores";
   import NoTimeDimensionCTA from "./NoTimeDimensionCTA.svelte";
@@ -93,10 +94,26 @@
   $: allTimeRange = $allTimeRangeQuery?.data as TimeRange;
   // Once we have the allTimeRange, set the default time range and time grain.
   // This reactive statement feels a bit precarious!
-  $: if (allTimeRange && allTimeRange?.start && $dashboardStore !== undefined) {
-    if (!$dashboardStore?.selectedTimeRange) {
+
+  $: isDashStoreDefined = $dashboardStore !== undefined;
+  $: selectedTimeRange = $dashboardStore?.selectedTimeRange;
+
+  $: {
+    console.log({
+      allTimeRange,
+      allTimeRangeStart: allTimeRange?.start,
+      isDashStoreDefined,
+      selectedTimeRange: get(dashboardStore)?.selectedTimeRange,
+    });
+  }
+
+  $: if (allTimeRange && allTimeRange?.start && isDashStoreDefined) {
+    const selectedTimeRange = get(dashboardStore)?.selectedTimeRange;
+    if (!selectedTimeRange) {
+      console.log("WILL SET DEFAULT TIME CONTROLS");
       setDefaultTimeControls(allTimeRange);
     } else {
+      console.log("WILL SET TIME CONTROLS FROM URL");
       setTimeControlsFromUrl(allTimeRange);
     }
   }
