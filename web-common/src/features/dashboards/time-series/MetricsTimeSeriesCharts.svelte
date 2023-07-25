@@ -193,6 +193,8 @@
   }
 
   let mouseoverValue = undefined;
+  let scrubbing = false;
+  let scrubStart = undefined;
 
   let startValue: Date;
   let endValue: Date;
@@ -292,6 +294,8 @@
           <div class="p-5"><CrossIcon /></div>
         {:else if formattedData}
           <MeasureChart
+            bind:scrubbing
+            bind:scrubStart
             bind:mouseoverValue
             data={formattedData}
             xAccessor="ts_position"

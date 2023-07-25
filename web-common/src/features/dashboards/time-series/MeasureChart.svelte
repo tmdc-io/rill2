@@ -18,6 +18,9 @@
   import MeasureValueMouseover from "./MeasureValueMouseover.svelte";
   import { niceMeasureExtents } from "./utils";
   import { TimeRoundingStrategy } from "../../../lib/time/types";
+  import { getContext } from "svelte";
+  import { contexts } from "@rilldata/web-common/components/data-graphic/constants";
+  import type { ScaleStore } from "@rilldata/web-common/components/data-graphic/state/types";
 
   export let width: number = undefined;
   export let height: number = undefined;
@@ -40,6 +43,8 @@
   export let mouseoverTimeFormat: (d: number | Date | string) => string = (v) =>
     v.toString();
   export let numberKind: NumberKind = NumberKind.ANY;
+
+  const xScale = getContext(contexts.scale("x")) as ScaleStore;
 
   export let tweenProps = { duration: 400, easing: cubicOut };
 
@@ -115,6 +120,13 @@
   $: setTimeout(() => {
     something = !something;
   }, 1000);
+
+  export let scrubStart;
+  function startScrub(event) {
+    console.log("start scrub", event);
+    scrubbing = true;
+    scrubStart = $xScale.invert(event.detail.start.x);
+  }
 </script>
 
 <SimpleDataGraphic
@@ -137,6 +149,11 @@
   yMaxTweenProps={tweenProps}
   xMaxTweenProps={tweenProps}
   xMinTweenProps={tweenProps}
+  on:scrub-start={startScrub}
+  on:scrub-end={(e) => {
+    console.log("end scrub", e);
+    scrubbing = false;
+  }}
 >
   <Axis side="right" {numberKind} />
   <Grid />
@@ -179,7 +196,7 @@
       class="stroke-blue-200"
     />
   </Body>
-  {#if !scrubbing && mouseoverValue?.x}
+  {#if mouseoverValue?.x}
     <WithRoundToTimegrain
       strategy={TimeRoundingStrategy.PREVIOUS}
       value={mouseoverValue.x}
@@ -230,5 +247,8 @@
         {/if}
       </WithBisector>
     </WithRoundToTimegrain>
+  {/if}
+  {#if scrubbing}
+    <text x={30} y={30}>{scrubStart}</text>
   {/if}
 </SimpleDataGraphic>
