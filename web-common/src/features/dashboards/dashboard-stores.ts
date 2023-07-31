@@ -4,7 +4,10 @@ import {
   getMapFromArray,
   removeIfExists,
 } from "@rilldata/web-common/lib/arrayUtils";
-import type { DashboardTimeControls } from "@rilldata/web-common/lib/time/types";
+import type {
+  DashboardTimeControls,
+  TimeRange,
+} from "@rilldata/web-common/lib/time/types";
 import type {
   V1MetricsView,
   V1MetricsViewFilter,
@@ -57,6 +60,7 @@ export interface MetricsExplorerEntity {
   dimensionFilterExcludeMode: Map<string, boolean>;
   // user selected time range
   selectedTimeRange?: DashboardTimeControls;
+  selectedScrubRange?: TimeRange;
   selectedComparisonTimeRange?: DashboardTimeControls;
   // flag to show/hide comparison based on user preference
   showComparison?: boolean;
@@ -304,6 +308,12 @@ const metricViewReducers = {
   setSelectedTimeRange(name: string, timeRange: DashboardTimeControls) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
       metricsExplorer.selectedTimeRange = timeRange;
+    });
+  },
+
+  setSelectedScrubRange(name: string, timeRange: TimeRange) {
+    updateMetricsExplorerByName(name, (metricsExplorer) => {
+      metricsExplorer.selectedScrubRange = timeRange;
     });
   },
 

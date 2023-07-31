@@ -3,7 +3,10 @@
   import { Axis } from "@rilldata/web-common/components/data-graphic/guides";
   import CrossIcon from "@rilldata/web-common/components/icons/CrossIcon.svelte";
   import SeachableFilterButton from "@rilldata/web-common/components/searchable-filter-menu/SeachableFilterButton.svelte";
-  import { useDashboardStore } from "@rilldata/web-common/features/dashboards/dashboard-stores";
+  import {
+    metricsExplorerStore,
+    useDashboardStore,
+  } from "@rilldata/web-common/features/dashboards/dashboard-stores";
   import {
     humanizeDataType,
     NicelyFormattedTypes,
@@ -16,6 +19,7 @@
   import { createShowHideMeasuresStore } from "@rilldata/web-common/features/dashboards/show-hide-selectors";
   import { EntityStatus } from "@rilldata/web-common/features/entity-management/types";
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
+  import { TimeRangePreset } from "@rilldata/web-common/lib/time/types";
   import {
     getAdjustedChartTime,
     getAdjustedFetchTime,
@@ -195,9 +199,19 @@
   let mouseoverValue = undefined;
   let scrubbing = false;
   let scrubStart = undefined;
+  let scrubEnd = undefined;
 
   let startValue: Date;
   let endValue: Date;
+
+  // $: console.log(
+  //   "scrubbing, scrubStart, scrubEnd, hasScrub, mouseoverValue",
+  //   scrubbing,
+  //   scrubStart,
+  //   scrubEnd,
+  //   hasScrub,
+  //   mouseoverValue
+  // );
 
   // FIXME: move this logic to a function + write tests.
   $: if (
@@ -296,6 +310,7 @@
           <MeasureChart
             bind:scrubbing
             bind:scrubStart
+            bind:scrubEnd
             bind:mouseoverValue
             data={formattedData}
             xAccessor="ts_position"
@@ -305,6 +320,13 @@
             xMin={startValue}
             xMax={endValue}
             {showComparison}
+            on:apply-scrub={(event) => {
+              metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+                name: TimeRangePreset.CUSTOM,
+                start: new Date(event.detail?.scrubStart),
+                end: new Date(event.detail?.scrubEnd),
+              });
+            }}
             mouseoverTimeFormat={(value) => {
               /** format the date according to the time grain */
               return new Date(value).toLocaleDateString(

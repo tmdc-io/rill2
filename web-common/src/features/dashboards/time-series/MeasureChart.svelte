@@ -18,9 +18,13 @@
   import MeasureValueMouseover from "./MeasureValueMouseover.svelte";
   import { niceMeasureExtents } from "./utils";
   import { TimeRoundingStrategy } from "../../../lib/time/types";
-  import { getContext } from "svelte";
+  import { createEventDispatcher, getContext } from "svelte";
   import { contexts } from "@rilldata/web-common/components/data-graphic/constants";
   import type { ScaleStore } from "@rilldata/web-common/components/data-graphic/state/types";
+  import { roundDownToTimeUnit } from "@rilldata/web-common/features/dashboards/time-series/round-to-nearest-time-unit";
+  import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
+  import { bisectData } from "@rilldata/web-common/components/data-graphic/utils";
+  import MeasureScrub from "@rilldata/web-common/features/dashboards/time-series/MeasureScrub.svelte";
 
   export let width: number = undefined;
   export let height: number = undefined;
@@ -50,7 +54,24 @@
 
   // control point for scrub functionality.
   export let scrubbing = false;
+  export let scrubStart = undefined;
   export let scrubEnd = undefined;
+
+  const dispatch = createEventDispatcher();
+
+  $: hasSubrangeSelected = Boolean(!scrubbing && scrubStart && scrubEnd);
+
+  $: mainLineColor =
+    scrubbing || hasSubrangeSelected
+      ? "hsla(217, 10%, 60%, 1)"
+      : "hsla(217,60%, 55%, 1)";
+
+  $: areaColor =
+    scrubbing || hasSubrangeSelected
+      ? "hsla(210, 40%, 80%, .4)"
+      : "hsla(217,70%, 80%, .4)";
+
+  $: console.log(areaColor);
 
   $: [xExtentMin, xExtentMax] = extent(data, (d) => d[xAccessor]);
   $: [yExtentMin, yExtentMax] = extent(data, (d) => d[yAccessor]);
@@ -112,20 +133,45 @@
     return value >= min && value <= max;
   }
 
-  $: if (scrubbing) {
-    scrubEnd = alwaysBetween(internalXMin, internalXMax, mouseoverValue);
-  }
+  // $: if (scrubbing) {
+  //   scrubEnd = alwaysBetween(internalXMin, internalXMax, mouseoverValue?.x);
+  // }
 
   let something = true;
   $: setTimeout(() => {
     something = !something;
   }, 1000);
 
-  export let scrubStart;
   function startScrub(event) {
-    console.log("start scrub", event);
     scrubbing = true;
-    scrubStart = $xScale.invert(event.detail.start.x);
+
+    scrubStart = event.detail.start.x;
+    scrubEnd = undefined;
+
+    scrubStart = roundDownToTimeUnit(
+      $xScale.invert(scrubStart),
+      TIME_GRAIN[timeGrain].label
+    );
+
+    scrubStart = bisectData(scrubStart, "left", xAccessor, data)[xAccessor];
+  }
+
+  function endScrub(event) {
+    scrubbing = false;
+    hasSubrangeSelected = true;
+
+    scrubEnd = event.detail.stop.x;
+    scrubEnd = roundDownToTimeUnit(
+      $xScale.invert(scrubEnd),
+      TIME_GRAIN[timeGrain].label
+    );
+    scrubEnd = bisectData(scrubEnd, "left", xAccessor, data)[xAccessor];
+
+    console.log("hasSubrangeSelected", hasSubrangeSelected);
+    dispatch("apply-scrub", {
+      start: Math.min(scrubStart, scrubEnd),
+      stop: Math.max(scrubStart, scrubEnd),
+    });
   }
 </script>
 
@@ -150,10 +196,7 @@
   xMaxTweenProps={tweenProps}
   xMinTweenProps={tweenProps}
   on:scrub-start={startScrub}
-  on:scrub-end={(e) => {
-    console.log("end scrub", e);
-    scrubbing = false;
-  }}
+  on:scrub-end={endScrub}
 >
   <Axis side="right" {numberKind} />
   <Grid />
@@ -162,32 +205,34 @@
     We'll need to migrate this to a more robust solution once we've figured out
     the right way to "tile" together a time series with multiple pages of data.
     -->
-    {#key $timeRangeKey}
-      {#if showComparison}
-        <g
-          class="transition-opacity"
-          class:opacity-80={mouseoverValue?.x}
-          class:opacity-40={!mouseoverValue?.x}
-        >
-          <ChunkedLine
-            area={false}
-            lineColor={`hsl(217, 10%, 60%)`}
-            delay={$timeRangeKey !== $previousTimeRangeKey ? 0 : delay}
-            duration={$timeRangeKey !== $previousTimeRangeKey ? 0 : 200}
-            {data}
-            {xAccessor}
-            yAccessor="comparison.{yAccessor}"
-          />
-        </g>
-      {/if}
-      <ChunkedLine
-        delay={$timeRangeKey !== $previousTimeRangeKey ? 0 : delay}
-        duration={$timeRangeKey !== $previousTimeRangeKey ? 0 : 200}
-        {data}
-        {xAccessor}
-        {yAccessor}
-      />
-    {/key}
+    <!-- {#key $timeRangeKey} -->
+    {#if showComparison}
+      <g
+        class="transition-opacity"
+        class:opacity-80={mouseoverValue?.x}
+        class:opacity-40={!mouseoverValue?.x}
+      >
+        <ChunkedLine
+          area={false}
+          lineColor={`hsl(217, 10%, 60%)`}
+          delay={$timeRangeKey !== $previousTimeRangeKey ? 0 : delay}
+          duration={$timeRangeKey !== $previousTimeRangeKey ? 0 : 200}
+          {data}
+          {xAccessor}
+          yAccessor="comparison.{yAccessor}"
+        />
+      </g>
+    {/if}
+    <ChunkedLine
+      lineColor={mainLineColor}
+      {areaColor}
+      delay={$timeRangeKey !== $previousTimeRangeKey ? 0 : delay}
+      duration={$timeRangeKey !== $previousTimeRangeKey ? 0 : 200}
+      {data}
+      {xAccessor}
+      {yAccessor}
+    />
+    <!-- {/key} -->
     <line
       x1={config.plotLeft}
       x2={config.plotLeft + config.plotRight}
@@ -210,45 +255,66 @@
         let:point
       >
         {#if point && inBounds(internalXMin, internalXMax, point[xAccessor])}
-          <g transition:fly|local={{ duration: 100, x: -4 }}>
-            <text
-              class="fill-gray-600"
-              style:paint-order="stroke"
-              stroke="white"
-              stroke-width="3px"
-              x={config.plotLeft + config.bodyBuffer + 6}
-              y={config.plotTop + 10 + config.bodyBuffer}
-            >
-              {mouseoverTimeFormat(point[labelAccessor])}
-            </text>
-            {#if showComparison && point[`comparison.${labelAccessor}`]}
+          {#if scrubbing && !hasSubrangeSelected}
+            <MeasureScrub
+              start={scrubStart}
+              stop={point[xAccessor]}
+              isScrubbing={true}
+              timeGrainLabel={TIME_GRAIN[timeGrain].label}
+              {data}
+              {xAccessor}
+              {yAccessor}
+              {mouseoverTimeFormat}
+            />
+          {:else}
+            <g transition:fly|local={{ duration: 100, x: -4 }}>
               <text
+                class="fill-gray-600"
                 style:paint-order="stroke"
                 stroke="white"
                 stroke-width="3px"
-                class="fill-gray-400"
                 x={config.plotLeft + config.bodyBuffer + 6}
-                y={config.plotTop + 24 + config.bodyBuffer}
+                y={config.plotTop + 10 + config.bodyBuffer}
               >
-                {mouseoverTimeFormat(point[`comparison.${labelAccessor}`])} prev.
+                {mouseoverTimeFormat(point[labelAccessor])}
               </text>
-            {/if}
-          </g>
-          <g transition:fly|local={{ duration: 100, x: -4 }}>
-            <MeasureValueMouseover
-              {point}
-              {xAccessor}
-              {yAccessor}
-              {showComparison}
-              {mouseoverFormat}
-              {numberKind}
-            />
-          </g>
+              {#if showComparison && point[`comparison.${labelAccessor}`]}
+                <text
+                  style:paint-order="stroke"
+                  stroke="white"
+                  stroke-width="3px"
+                  class="fill-gray-400"
+                  x={config.plotLeft + config.bodyBuffer + 6}
+                  y={config.plotTop + 24 + config.bodyBuffer}
+                >
+                  {mouseoverTimeFormat(point[`comparison.${labelAccessor}`])} prev.
+                </text>
+              {/if}
+            </g>
+            <g transition:fly|local={{ duration: 100, x: -4 }}>
+              <MeasureValueMouseover
+                {point}
+                {xAccessor}
+                {yAccessor}
+                {showComparison}
+                {mouseoverFormat}
+                {numberKind}
+              />
+            </g>
+          {/if}
         {/if}
       </WithBisector>
     </WithRoundToTimegrain>
   {/if}
-  {#if scrubbing}
-    <text x={30} y={30}>{scrubStart}</text>
+  {#if hasSubrangeSelected}
+    <MeasureScrub
+      start={scrubStart}
+      stop={scrubEnd}
+      timeGrainLabel={TIME_GRAIN[timeGrain].label}
+      {data}
+      {xAccessor}
+      {yAccessor}
+      {mouseoverTimeFormat}
+    />
   {/if}
 </SimpleDataGraphic>
