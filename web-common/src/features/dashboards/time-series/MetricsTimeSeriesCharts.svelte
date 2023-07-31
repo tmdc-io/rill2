@@ -3,10 +3,7 @@
   import { Axis } from "@rilldata/web-common/components/data-graphic/guides";
   import CrossIcon from "@rilldata/web-common/components/icons/CrossIcon.svelte";
   import SeachableFilterButton from "@rilldata/web-common/components/searchable-filter-menu/SeachableFilterButton.svelte";
-  import {
-    metricsExplorerStore,
-    useDashboardStore,
-  } from "@rilldata/web-common/features/dashboards/dashboard-stores";
+  import { useDashboardStore } from "@rilldata/web-common/features/dashboards/dashboard-stores";
   import {
     humanizeDataType,
     NicelyFormattedTypes,
@@ -19,7 +16,6 @@
   import { createShowHideMeasuresStore } from "@rilldata/web-common/features/dashboards/show-hide-selectors";
   import { EntityStatus } from "@rilldata/web-common/features/entity-management/types";
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
-  import { TimeRangePreset } from "@rilldata/web-common/lib/time/types";
   import {
     getAdjustedChartTime,
     getAdjustedFetchTime,
@@ -208,6 +204,8 @@
   let scrubStart = undefined;
   let scrubEnd = undefined;
 
+  $: console.log(scrubbing, scrubStart, scrubEnd);
+
   let startValue: Date;
   let endValue: Date;
 
@@ -320,22 +318,15 @@
             bind:scrubStart
             bind:scrubEnd
             bind:mouseoverValue
+            {metricViewName}
             data={formattedData}
             xAccessor="ts_position"
             labelAccessor="ts"
-            zone={$dashboardStore?.selectedTimezone}
             timeGrain={interval}
             yAccessor={measure.name}
             xMin={startValue}
             xMax={endValue}
             {showComparison}
-            on:apply-scrub={(event) => {
-              metricsExplorerStore.setSelectedScrubRange(metricViewName, {
-                name: TimeRangePreset.CUSTOM,
-                start: new Date(event.detail?.scrubStart),
-                end: new Date(event.detail?.scrubEnd),
-              });
-            }}
             mouseoverTimeFormat={(value) => {
               /** format the date according to the time grain */
               return new Date(value).toLocaleDateString(

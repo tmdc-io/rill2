@@ -17,7 +17,10 @@
   import { fly } from "svelte/transition";
   import MeasureValueMouseover from "./MeasureValueMouseover.svelte";
   import { niceMeasureExtents } from "./utils";
-  import { TimeRoundingStrategy } from "../../../lib/time/types";
+  import {
+    TimeRangePreset,
+    TimeRoundingStrategy,
+  } from "../../../lib/time/types";
   import { createEventDispatcher, getContext } from "svelte";
   import { contexts } from "@rilldata/web-common/components/data-graphic/constants";
   import type { ScaleStore } from "@rilldata/web-common/components/data-graphic/state/types";
@@ -25,7 +28,9 @@
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
   import { bisectData } from "@rilldata/web-common/components/data-graphic/utils";
   import MeasureScrub from "@rilldata/web-common/features/dashboards/time-series/MeasureScrub.svelte";
+  import { metricsExplorerStore } from "@rilldata/web-common/features/dashboards/dashboard-stores";
 
+  export let metricViewName: string;
   export let width: number = undefined;
   export let height: number = undefined;
   export let xMin: Date = undefined;
@@ -42,6 +47,12 @@
   export let yAccessor = "value";
   export let mouseoverValue;
   export let hovered = false;
+
+  // control point for scrub functionality.
+  export let scrubbing = false;
+  export let scrubStart;
+  export let scrubEnd;
+
   export let mouseoverFormat: (d: number | Date | string) => string = (v) =>
     v.toString();
   export let mouseoverTimeFormat: (d: number | Date | string) => string = (v) =>
@@ -52,13 +63,6 @@
 
   export let tweenProps = { duration: 400, easing: cubicOut };
 
-  // control point for scrub functionality.
-  export let scrubbing = false;
-  export let scrubStart = undefined;
-  export let scrubEnd = undefined;
-
-  const dispatch = createEventDispatcher();
-
   $: hasSubrangeSelected = Boolean(!scrubbing && scrubStart && scrubEnd);
 
   $: mainLineColor =
@@ -68,11 +72,10 @@
 
   $: areaColor =
     scrubbing || hasSubrangeSelected
-      ? "hsla(210, 40%, 80%, .4)"
+      ? "hsla(225, 20%, 80%, .2)"
       : "hsla(217,70%, 80%, .4)";
 
-  $: console.log(areaColor);
-
+  $: console.log(yAccessor, hasSubrangeSelected);
   $: [xExtentMin, xExtentMax] = extent(data, (d) => d[xAccessor]);
   $: [yExtentMin, yExtentMax] = extent(data, (d) => d[yAccessor]);
   let comparisonExtents;
@@ -133,6 +136,18 @@
     return value >= min && value <= max;
   }
 
+  function resetScrub() {
+    metricsExplorerStore.setSelectedScrubRange(metricViewName, undefined);
+  }
+
+  function applyScrub() {
+    metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+      name: TimeRangePreset.CUSTOM,
+      start: new Date(scrubStart),
+      end: new Date(scrubEnd),
+    });
+  }
+
   // $: if (scrubbing) {
   //   scrubEnd = alwaysBetween(internalXMin, internalXMax, mouseoverValue?.x);
   // }
@@ -162,11 +177,7 @@
     );
     scrubEnd = bisectData(scrubEnd, "left", xAccessor, data)[xAccessor];
 
-    console.log("hasSubrangeSelected", hasSubrangeSelected);
-    dispatch("apply-scrub", {
-      start: Math.min(scrubStart, scrubEnd),
-      stop: Math.max(scrubStart, scrubEnd),
-    });
+    applyScrub();
   }
 </script>
 
@@ -190,8 +201,8 @@
   yMaxTweenProps={tweenProps}
   xMaxTweenProps={tweenProps}
   xMinTweenProps={tweenProps}
-  on:scrub-start={startScrub}
-  on:scrub-end={endScrub}
+  on:scrub-start={(e) => startScrub(e)}
+  on:scrub-end={(e) => endScrub(e)}
 >
   <Axis side="right" {numberKind} />
   <Grid />

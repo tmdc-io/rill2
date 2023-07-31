@@ -42,8 +42,6 @@ Over time, we'll make this the default Line implementation, but it's not quite t
   export let lineColor = "hsla(217,60%, 55%, 1)";
   export let areaColor = "hsla(217,70%, 80%, .4)";
 
-  $: console.log(areaColor);
-
   const id = guidGenerator();
 
   // get the scale functions from the data graphic
