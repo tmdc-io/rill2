@@ -137,11 +137,6 @@
   //   scrubEnd = alwaysBetween(internalXMin, internalXMax, mouseoverValue?.x);
   // }
 
-  let something = true;
-  $: setTimeout(() => {
-    something = !something;
-  }, 1000);
-
   function startScrub(event) {
     scrubbing = true;
 

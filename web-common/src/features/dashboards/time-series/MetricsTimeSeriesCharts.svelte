@@ -138,6 +138,7 @@
     const { start: adjustedStart, end: adjustedEnd } = getAdjustedFetchTime(
       $dashboardStore?.selectedTimeRange?.start,
       $dashboardStore?.selectedTimeRange?.end,
+      $dashboardStore?.selectedTimezone,
       interval
     );
 
@@ -150,6 +151,7 @@
         timeStart: adjustedStart,
         timeEnd: adjustedEnd,
         timeGranularity: interval,
+        timeZone: $dashboardStore?.selectedTimezone,
       }
     );
     if (displayComparison) {
@@ -157,6 +159,7 @@
         getAdjustedFetchTime(
           $dashboardStore?.selectedComparisonTimeRange?.start,
           $dashboardStore?.selectedComparisonTimeRange?.end,
+          $dashboardStore?.selectedTimezone,
           interval
         );
 
@@ -169,6 +172,7 @@
           timeStart: compAdjustedStart,
           timeEnd: compAdjustedEnd,
           timeGranularity: interval,
+          timeZone: $dashboardStore?.selectedTimezone,
         }
       );
     }
@@ -182,7 +186,9 @@
   let dataCopy;
   let dataComparisonCopy;
 
-  $: if ($timeSeriesQuery?.data?.data) dataCopy = $timeSeriesQuery.data.data;
+  $: if ($timeSeriesQuery?.data?.data) {
+    dataCopy = $timeSeriesQuery.data.data;
+  }
   $: if ($timeSeriesComparisonQuery?.data?.data)
     dataComparisonCopy = $timeSeriesComparisonQuery.data.data;
 
@@ -192,7 +198,8 @@
     formattedData = prepareTimeSeries(
       dataCopy,
       dataComparisonCopy,
-      TIME_GRAIN[interval].duration
+      TIME_GRAIN[interval].duration,
+      $dashboardStore.selectedTimezone
     );
   }
 
@@ -221,6 +228,7 @@
     const adjustedChartValue = getAdjustedChartTime(
       $dashboardStore?.selectedTimeRange?.start,
       $dashboardStore?.selectedTimeRange?.end,
+      $dashboardStore?.selectedTimezone,
       interval,
       $dashboardStore?.selectedTimeRange?.name
     );
@@ -315,6 +323,7 @@
             data={formattedData}
             xAccessor="ts_position"
             labelAccessor="ts"
+            zone={$dashboardStore?.selectedTimezone}
             timeGrain={interval}
             yAccessor={measure.name}
             xMin={startValue}

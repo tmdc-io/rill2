@@ -62,6 +62,8 @@ export interface MetricsExplorerEntity {
   selectedTimeRange?: DashboardTimeControls;
   selectedScrubRange?: TimeRange;
   selectedComparisonTimeRange?: DashboardTimeControls;
+  // user selected timezone
+  selectedTimezone?: string;
   // flag to show/hide comparison based on user preference
   showComparison?: boolean;
 
@@ -329,6 +331,12 @@ const metricViewReducers = {
   ) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
       metricsExplorer.selectedComparisonTimeRange = comparisonTimeRange;
+    });
+  },
+
+  setTimeZone(name: string, zoneIANA: string) {
+    updateMetricsExplorerByName(name, (metricsExplorer) => {
+      metricsExplorer.selectedTimezone = zoneIANA;
     });
   },
 
