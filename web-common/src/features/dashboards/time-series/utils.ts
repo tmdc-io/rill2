@@ -1,4 +1,6 @@
 import { adjustOffsetForZone } from "@rilldata/web-common/lib/convertTimestampPreview";
+import { bisectData } from "@rilldata/web-common/components/data-graphic/utils";
+import { roundDownToTimeUnit } from "./round-to-nearest-time-unit";
 import { getDurationMultiple, getOffset } from "../../../lib/time/transforms";
 import { TimeOffsetType } from "../../../lib/time/types";
 
@@ -56,4 +58,30 @@ export function prepareTimeSeries(
       ...toComparisonKeys(comparisonPt || {}, offsetDuration, zone),
     };
   });
+}
+
+export function getBisectedTimeFromCordinates(
+  value,
+  scaleStore,
+  xAccessor,
+  data,
+  grainLabel
+) {
+  const roundedValue = roundDownToTimeUnit(
+    scaleStore.invert(value),
+    grainLabel
+  );
+  return bisectData(roundedValue, "left", xAccessor, data)[xAccessor];
+}
+
+// Return start and end of the time range that is ordered.
+export function getOrderedStartEnd(start: Date, stop: Date) {
+  const startMs = start.getTime();
+  const stopMs = stop.getTime();
+
+  if (startMs > stopMs) {
+    return { start: stop, end: start };
+  } else {
+    return { start, end: stop };
+  }
 }

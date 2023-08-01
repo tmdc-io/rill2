@@ -3,7 +3,10 @@
   import { Axis } from "@rilldata/web-common/components/data-graphic/guides";
   import CrossIcon from "@rilldata/web-common/components/icons/CrossIcon.svelte";
   import SeachableFilterButton from "@rilldata/web-common/components/searchable-filter-menu/SeachableFilterButton.svelte";
-  import { useDashboardStore } from "@rilldata/web-common/features/dashboards/dashboard-stores";
+  import {
+    useDashboardStore,
+    useFetchTimeRange,
+  } from "@rilldata/web-common/features/dashboards/dashboard-stores";
   import {
     humanizeDataType,
     NicelyFormattedTypes,
@@ -37,6 +40,7 @@
   export let workspaceWidth: number;
 
   $: dashboardStore = useDashboardStore(metricViewName);
+  $: fetchTimeStore = useFetchTimeRange(metricViewName);
 
   $: instanceId = $runtime.instanceId;
 
@@ -65,15 +69,15 @@
     name = $dashboardStore?.selectedTimeRange?.name;
   }
 
-  $: timeStart = $dashboardStore?.selectedTimeRange?.start?.toISOString();
-  $: timeEnd = $dashboardStore?.selectedTimeRange?.end?.toISOString();
+  $: timeStart = $fetchTimeStore?.start?.toISOString();
+  $: timeEnd = $fetchTimeStore?.end?.toISOString();
   $: totalsQuery = createQueryServiceMetricsViewTotals(
     instanceId,
     metricViewName,
     {
       measureNames: selectedMeasureNames,
-      timeStart: timeStart,
-      timeEnd: timeEnd,
+      timeStart,
+      timeEnd,
       filter: $dashboardStore?.filters,
     },
     {
@@ -200,23 +204,8 @@
   }
 
   let mouseoverValue = undefined;
-  let scrubbing = false;
-  let scrubStart = undefined;
-  let scrubEnd = undefined;
-
-  $: console.log(scrubbing, scrubStart, scrubEnd);
-
   let startValue: Date;
   let endValue: Date;
-
-  // $: console.log(
-  //   "scrubbing, scrubStart, scrubEnd, hasScrub, mouseoverValue",
-  //   scrubbing,
-  //   scrubStart,
-  //   scrubEnd,
-  //   hasScrub,
-  //   mouseoverValue
-  // );
 
   // FIXME: move this logic to a function + write tests.
   $: if (
@@ -314,9 +303,9 @@
           <div class="p-5"><CrossIcon /></div>
         {:else if formattedData}
           <MeasureChart
-            bind:scrubbing
-            bind:scrubStart
-            bind:scrubEnd
+            scrubbing={$dashboardStore?.selectedScrubRange?.isScrubbing}
+            scrubStart={$dashboardStore?.selectedScrubRange?.start}
+            scrubEnd={$dashboardStore?.selectedScrubRange?.end}
             bind:mouseoverValue
             {metricViewName}
             data={formattedData}

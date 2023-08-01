@@ -143,6 +143,10 @@ export interface TimeRangeOption extends TimeRange {
   label: string;
 }
 
+export interface ScrubRange extends TimeRange {
+  isScrubbing: boolean;
+}
+
 export interface DashboardTimeControls extends TimeRange {
   interval?: V1TimeGrain;
   label?: string;

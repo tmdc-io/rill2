@@ -76,6 +76,7 @@ A simple composable container for SVG-based data graphics.
       on:scrub-start
       on:scrub-move
       on:scrub-end
+      on:click
     >
       <slot {xScale} {yScale} {mouseoverValue} {config} {hovered} />
     </SimpleSVGContainer>

@@ -16,19 +16,24 @@
   import { writable } from "svelte/store";
   import { fly } from "svelte/transition";
   import MeasureValueMouseover from "./MeasureValueMouseover.svelte";
-  import { niceMeasureExtents } from "./utils";
+  import {
+    getBisectedTimeFromCordinates,
+    getOrderedStartEnd,
+    niceMeasureExtents,
+  } from "./utils";
   import {
     TimeRangePreset,
     TimeRoundingStrategy,
   } from "../../../lib/time/types";
-  import { createEventDispatcher, getContext } from "svelte";
+  import { getContext } from "svelte";
   import { contexts } from "@rilldata/web-common/components/data-graphic/constants";
   import type { ScaleStore } from "@rilldata/web-common/components/data-graphic/state/types";
-  import { roundDownToTimeUnit } from "@rilldata/web-common/features/dashboards/time-series/round-to-nearest-time-unit";
   import { TIME_GRAIN } from "@rilldata/web-common/lib/time/config";
-  import { bisectData } from "@rilldata/web-common/components/data-graphic/utils";
   import MeasureScrub from "@rilldata/web-common/features/dashboards/time-series/MeasureScrub.svelte";
-  import { metricsExplorerStore } from "@rilldata/web-common/features/dashboards/dashboard-stores";
+  import {
+    metricsExplorerStore,
+    useDashboardStore,
+  } from "@rilldata/web-common/features/dashboards/dashboard-stores";
 
   export let metricViewName: string;
   export let width: number = undefined;
@@ -58,12 +63,17 @@
   export let mouseoverTimeFormat: (d: number | Date | string) => string = (v) =>
     v.toString();
   export let numberKind: NumberKind = NumberKind.ANY;
+  export let tweenProps = { duration: 400, easing: cubicOut };
+
+  $: dashboardStore = useDashboardStore(metricViewName);
 
   const xScale = getContext(contexts.scale("x")) as ScaleStore;
 
-  export let tweenProps = { duration: 400, easing: cubicOut };
+  let justCreatedScrub = false;
 
-  $: hasSubrangeSelected = Boolean(!scrubbing && scrubStart && scrubEnd);
+  // $: console.log(scrubEnd, yAccessor);
+
+  $: hasSubrangeSelected = Boolean(scrubStart && scrubEnd);
 
   $: mainLineColor =
     scrubbing || hasSubrangeSelected
@@ -75,7 +85,6 @@
       ? "hsla(225, 20%, 80%, .2)"
       : "hsla(217,70%, 80%, .4)";
 
-  $: console.log(yAccessor, hasSubrangeSelected);
   $: [xExtentMin, xExtentMax] = extent(data, (d) => d[xAccessor]);
   $: [yExtentMin, yExtentMax] = extent(data, (d) => d[yAccessor]);
   let comparisonExtents;
@@ -140,44 +149,85 @@
     metricsExplorerStore.setSelectedScrubRange(metricViewName, undefined);
   }
 
-  function applyScrub() {
-    metricsExplorerStore.setSelectedScrubRange(metricViewName, {
-      name: TimeRangePreset.CUSTOM,
-      start: new Date(scrubStart),
-      end: new Date(scrubEnd),
-    });
-  }
-
   // $: if (scrubbing) {
   //   scrubEnd = alwaysBetween(internalXMin, internalXMax, mouseoverValue?.x);
   // }
 
   function startScrub(event) {
-    scrubbing = true;
-
-    scrubStart = event.detail.start.x;
-    scrubEnd = undefined;
-
-    scrubStart = roundDownToTimeUnit(
-      $xScale.invert(scrubStart),
+    scrubStart = getBisectedTimeFromCordinates(
+      event.detail?.start?.x,
+      $xScale,
+      xAccessor,
+      data,
       TIME_GRAIN[timeGrain].label
     );
 
-    scrubStart = bisectData(scrubStart, "left", xAccessor, data)[xAccessor];
+    metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+      name: TimeRangePreset.CUSTOM,
+      start: scrubStart,
+      end: undefined,
+      isScrubbing: true,
+    });
+  }
+
+  function moveScrub(event) {
+    const intermediateScrubEnd = getBisectedTimeFromCordinates(
+      event.detail?.stop?.x,
+      $xScale,
+      xAccessor,
+      data,
+      TIME_GRAIN[timeGrain].label
+    );
+
+    if (intermediateScrubEnd?.getTime() !== scrubEnd?.getTime()) {
+      metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+        name: TimeRangePreset.CUSTOM,
+        start: scrubStart,
+        end: intermediateScrubEnd,
+        isScrubbing: true,
+      });
+    }
   }
 
   function endScrub(event) {
-    scrubbing = false;
-    hasSubrangeSelected = true;
-
-    scrubEnd = event.detail.stop.x;
-    scrubEnd = roundDownToTimeUnit(
-      $xScale.invert(scrubEnd),
+    scrubEnd = getBisectedTimeFromCordinates(
+      event.detail?.stop?.x,
+      $xScale,
+      xAccessor,
+      data,
       TIME_GRAIN[timeGrain].label
     );
-    scrubEnd = bisectData(scrubEnd, "left", xAccessor, data)[xAccessor];
 
-    applyScrub();
+    justCreatedScrub = true;
+    // reset justCreatedScrub after 100 milliseconds
+    setTimeout(() => {
+      justCreatedScrub = false;
+    }, 100);
+
+    metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+      ...$dashboardStore?.selectedScrubRange,
+      end: scrubEnd,
+      isScrubbing: false,
+    });
+  }
+
+  async function onMouseClick() {
+    // skip if still scrubbing
+    if (justCreatedScrub || scrubbing) return;
+
+    // skip if no scrub range selected
+    if (!hasSubrangeSelected) return;
+
+    const { start, end } = getOrderedStartEnd(scrubStart, scrubEnd);
+    if (mouseoverValue?.x < start || mouseoverValue?.x > end) {
+      // console.log(
+      //   scrubbing,
+      //   "mouseoverValue",
+      //   mouseoverValue?.x,
+      //   hasSubrangeSelected
+      // );
+      resetScrub();
+    }
   }
 </script>
 
@@ -201,7 +251,9 @@
   yMaxTweenProps={tweenProps}
   xMaxTweenProps={tweenProps}
   xMinTweenProps={tweenProps}
+  on:click={() => onMouseClick()}
   on:scrub-start={(e) => startScrub(e)}
+  on:scrub-move={(e) => moveScrub(e)}
   on:scrub-end={(e) => endScrub(e)}
 >
   <Axis side="right" {numberKind} />
@@ -247,7 +299,7 @@
       class="stroke-blue-200"
     />
   </Body>
-  {#if mouseoverValue?.x}
+  {#if !scrubbing && mouseoverValue?.x}
     <WithRoundToTimegrain
       strategy={TimeRoundingStrategy.PREVIOUS}
       value={mouseoverValue.x}
@@ -261,53 +313,40 @@
         let:point
       >
         {#if point && inBounds(internalXMin, internalXMax, point[xAccessor])}
-          {#if scrubbing && !hasSubrangeSelected}
-            <MeasureScrub
-              start={scrubStart}
-              stop={point[xAccessor]}
-              isScrubbing={true}
-              timeGrainLabel={TIME_GRAIN[timeGrain].label}
-              {data}
-              {xAccessor}
-              {yAccessor}
-              {mouseoverTimeFormat}
-            />
-          {:else}
-            <g transition:fly|local={{ duration: 100, x: -4 }}>
+          <g transition:fly|local={{ duration: 100, x: -4 }}>
+            <text
+              class="fill-gray-600"
+              style:paint-order="stroke"
+              stroke="white"
+              stroke-width="3px"
+              x={config.plotLeft + config.bodyBuffer + 6}
+              y={config.plotTop + 10 + config.bodyBuffer}
+            >
+              {mouseoverTimeFormat(point[labelAccessor])}
+            </text>
+            {#if showComparison && point[`comparison.${labelAccessor}`]}
               <text
-                class="fill-gray-600"
                 style:paint-order="stroke"
                 stroke="white"
                 stroke-width="3px"
+                class="fill-gray-400"
                 x={config.plotLeft + config.bodyBuffer + 6}
-                y={config.plotTop + 10 + config.bodyBuffer}
+                y={config.plotTop + 24 + config.bodyBuffer}
               >
-                {mouseoverTimeFormat(point[labelAccessor])}
+                {mouseoverTimeFormat(point[`comparison.${labelAccessor}`])} prev.
               </text>
-              {#if showComparison && point[`comparison.${labelAccessor}`]}
-                <text
-                  style:paint-order="stroke"
-                  stroke="white"
-                  stroke-width="3px"
-                  class="fill-gray-400"
-                  x={config.plotLeft + config.bodyBuffer + 6}
-                  y={config.plotTop + 24 + config.bodyBuffer}
-                >
-                  {mouseoverTimeFormat(point[`comparison.${labelAccessor}`])} prev.
-                </text>
-              {/if}
-            </g>
-            <g transition:fly|local={{ duration: 100, x: -4 }}>
-              <MeasureValueMouseover
-                {point}
-                {xAccessor}
-                {yAccessor}
-                {showComparison}
-                {mouseoverFormat}
-                {numberKind}
-              />
-            </g>
-          {/if}
+            {/if}
+          </g>
+          <g transition:fly|local={{ duration: 100, x: -4 }}>
+            <MeasureValueMouseover
+              {point}
+              {xAccessor}
+              {yAccessor}
+              {showComparison}
+              {mouseoverFormat}
+              {numberKind}
+            />
+          </g>
         {/if}
       </WithBisector>
     </WithRoundToTimegrain>

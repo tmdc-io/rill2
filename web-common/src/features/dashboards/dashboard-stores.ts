@@ -1,12 +1,13 @@
 import { getDashboardStateFromUrl } from "@rilldata/web-common/features/dashboards/proto-state/fromProto";
 import { getProtoFromDashboardState } from "@rilldata/web-common/features/dashboards/proto-state/toProto";
+import { getOrderedStartEnd } from "@rilldata/web-common/features/dashboards/time-series/utils";
 import {
   getMapFromArray,
   removeIfExists,
 } from "@rilldata/web-common/lib/arrayUtils";
 import type {
   DashboardTimeControls,
-  TimeRange,
+  ScrubRange,
 } from "@rilldata/web-common/lib/time/types";
 import type {
   V1MetricsView,
@@ -60,7 +61,7 @@ export interface MetricsExplorerEntity {
   dimensionFilterExcludeMode: Map<string, boolean>;
   // user selected time range
   selectedTimeRange?: DashboardTimeControls;
-  selectedScrubRange?: TimeRange;
+  selectedScrubRange?: ScrubRange;
   selectedComparisonTimeRange?: DashboardTimeControls;
   // user selected timezone
   selectedTimezone?: string;
@@ -313,9 +314,9 @@ const metricViewReducers = {
     });
   },
 
-  setSelectedScrubRange(name: string, timeRange: TimeRange) {
+  setSelectedScrubRange(name: string, scrubRange: ScrubRange) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
-      metricsExplorer.selectedScrubRange = timeRange;
+      metricsExplorer.selectedScrubRange = scrubRange;
     });
   },
 
@@ -484,6 +485,33 @@ export function useDashboardStore(
 ): Readable<MetricsExplorerEntity> {
   return derived(metricsExplorerStore, ($store) => {
     return $store.entities[name];
+  });
+}
+
+/***
+ * Dervied store to get time range to be used for fetching data
+ * If we have a scrub range and isScrubbing is false, use that,
+ * otherwise use the selected time range
+ */
+
+export function useFetchTimeRange(name: string) {
+  return derived(metricsExplorerStore, ($store) => {
+    const entity = $store.entities[name];
+    if (entity?.selectedScrubRange && !entity.selectedScrubRange?.isScrubbing) {
+      const { start, end } = getOrderedStartEnd(
+        entity.selectedScrubRange?.start,
+        entity.selectedScrubRange?.end
+      );
+      return {
+        start,
+        end,
+      };
+    } else {
+      return {
+        start: entity.selectedTimeRange?.start,
+        end: entity.selectedTimeRange?.end,
+      };
+    }
   });
 }
 
