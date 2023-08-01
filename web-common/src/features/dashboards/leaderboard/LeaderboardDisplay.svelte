@@ -95,7 +95,9 @@
   );
 
   let unfilteredTotal: number;
-  $: unfilteredTotal = $unfilteredTotalsQuery.data?.data?.[activeMeasure.name];
+  $: if (activeMeasure?.name) {
+    unfilteredTotal = $unfilteredTotalsQuery.data?.data?.[activeMeasure.name];
+  }
 
   let leaderboardExpanded;
 
