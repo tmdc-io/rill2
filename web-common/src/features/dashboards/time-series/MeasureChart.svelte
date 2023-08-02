@@ -154,7 +154,9 @@
   // }
 
   function startScrub(event) {
-    scrubStart = getBisectedTimeFromCordinates(
+    console.log("start", event.detail);
+
+    const scrubStartDate = getBisectedTimeFromCordinates(
       event.detail?.start?.x,
       $xScale,
       xAccessor,
@@ -162,16 +164,29 @@
       TIME_GRAIN[timeGrain].label
     );
 
-    metricsExplorerStore.setSelectedScrubRange(metricViewName, {
-      name: TimeRangePreset.CUSTOM,
-      start: scrubStart,
-      end: undefined,
-      isScrubbing: true,
-    });
+    if (hasSubrangeSelected) {
+      // check if we are scrubbing on the edges of scrub rect
+      // if (
+      //   scrubStartDate?.getTime() === scrubStart?.getTime() ||
+      //   scrubStartDate?.getTime() === scrubEnd?.getTime()
+      // ) {
+      //   metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+      //     ...$dashboardStore?.selectedScrubRange,
+      //     isScrubbing: true,
+      //   });
+      // }
+    } else {
+      metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+        name: TimeRangePreset.CUSTOM,
+        start: scrubStartDate,
+        end: undefined,
+        isScrubbing: true,
+      });
+    }
   }
 
   function moveScrub(event) {
-    const intermediateScrubEnd = getBisectedTimeFromCordinates(
+    const intermediateScrubVal = getBisectedTimeFromCordinates(
       event.detail?.stop?.x,
       $xScale,
       xAccessor,
@@ -179,13 +194,28 @@
       TIME_GRAIN[timeGrain].label
     );
 
-    if (intermediateScrubEnd?.getTime() !== scrubEnd?.getTime()) {
-      metricsExplorerStore.setSelectedScrubRange(metricViewName, {
-        name: TimeRangePreset.CUSTOM,
-        start: scrubStart,
-        end: intermediateScrubEnd,
-        isScrubbing: true,
-      });
+    if (hasSubrangeSelected && !scrubbing) {
+      if (intermediateScrubVal < scrubStart) {
+        console.log("inside left");
+        if (intermediateScrubVal?.getTime() !== scrubStart?.getTime()) {
+          metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+            name: TimeRangePreset.CUSTOM,
+            start: intermediateScrubVal,
+            end: scrubEnd,
+            isScrubbing: false,
+          });
+        }
+      }
+    } else {
+      // Only make state changes when the bisected value changes
+      if (intermediateScrubVal?.getTime() !== scrubEnd?.getTime()) {
+        metricsExplorerStore.setSelectedScrubRange(metricViewName, {
+          name: TimeRangePreset.CUSTOM,
+          start: scrubStart,
+          end: intermediateScrubVal,
+          isScrubbing: true,
+        });
+      }
     }
   }
 
@@ -247,6 +277,7 @@
   bind:hovered
   let:config
   let:yScale
+  customClass={scrubbing ? "cursor-ew-resize" : ""}
   yMinTweenProps={tweenProps}
   yMaxTweenProps={tweenProps}
   xMaxTweenProps={tweenProps}
