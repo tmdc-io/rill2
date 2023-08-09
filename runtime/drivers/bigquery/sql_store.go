@@ -37,7 +37,7 @@ func (c *Connection) Query(ctx context.Context, props map[string]any, sql string
 	}
 
 	q := client.Query(sql)
-	q.DisableQueryCache = true
+	// q.DisableQueryCache = true
 	c.logger.Info("started bigquery job")
 	startTime := time.Now()
 	it, err := q.Read(ctx)
