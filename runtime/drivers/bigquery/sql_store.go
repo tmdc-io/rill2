@@ -37,7 +37,11 @@ func (c *Connection) Query(ctx context.Context, props map[string]any, sql string
 	}
 
 	q := client.Query(sql)
+	q.DisableQueryCache = true
+	c.logger.Info("started bigquery job")
+	startTime := time.Now()
 	it, err := q.Read(ctx)
+	c.logger.Info("finished big query job", zap.Duration("duration", time.Since(startTime)), zap.Bool("success", err == nil))
 	if err != nil && !strings.Contains(err.Error(), "Syntax error") {
 		c.logger.Info("query failed, retrying without storage api", zap.Error(err))
 		// the query results are always cached in a temporary table that storage api can use

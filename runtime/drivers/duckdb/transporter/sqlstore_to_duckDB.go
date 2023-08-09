@@ -5,10 +5,12 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/marcboeker/go-duckdb"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime/drivers"
+	"github.com/rilldata/rill/runtime/pkg/observability"
 	"go.uber.org/zap"
 )
 
@@ -30,7 +32,7 @@ func NewSQLStoreToDuckDB(from drivers.SQLStore, to drivers.OLAPStore, logger *za
 	}
 }
 
-func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, sink drivers.Sink, opts *drivers.TransferOpts, p drivers.Progress) error {
+func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, sink drivers.Sink, opts *drivers.TransferOpts, p drivers.Progress) (transferErr error) {
 	src, ok := source.DatabaseSource()
 	if !ok {
 		return fmt.Errorf("type of source should `drivers.DatabaseSource`")
@@ -68,6 +70,18 @@ func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, 
 		return err
 	}
 
+	start := time.Now()
+	apitime := time.Now()
+	duckdbtime := time.Now()
+	s.logger.Info("started transfer from SQL store to duckdb", zap.String("sink_table", dbSink.Table), observability.ZapCtx(ctx))
+	defer func() {
+		s.logger.Info("transfer finished",
+			zap.Duration("duration", time.Since(start)),
+			zap.Bool("success", transferErr == nil),
+			zap.Duration("api_duration", apitime.Sub(start)),
+			zap.Duration("duckdb_duration", duckdbtime.Sub(start)),
+			observability.ZapCtx(ctx))
+	}()
 	return s.to.WithRaw(ctx, 1, func(driverConn any) error {
 		var conn driver.Conn
 		// we are wrapping connections with otel connections
@@ -96,11 +110,14 @@ func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, 
 				if num == _batchSize {
 					p.Observe(_batchSize, drivers.ProgressUnitRecord)
 					num = 0
+					t := time.Now()
 					if err := a.Flush(); err != nil {
 						return err
 					}
+					duckdbtime = duckdbtime.Add(time.Since(t))
 				}
 
+				t := time.Now()
 				row, err := iter.Next(ctx)
 				if err != nil {
 					if errors.Is(err, drivers.ErrIteratorDone) {
@@ -109,7 +126,9 @@ func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, 
 					}
 					return err
 				}
+				apitime = apitime.Add(time.Since(t))
 
+				t = time.Now()
 				colValues := make([]driver.Value, len(row))
 				for i, col := range row {
 					colValues[i] = driver.Value(col)
@@ -118,6 +137,7 @@ func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, 
 				if err := a.AppendRowArray(colValues); err != nil {
 					return err
 				}
+				duckdbtime = duckdbtime.Add(time.Since(t))
 			}
 		}
 	})
