@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const _batchSize = 10000
+// const _batchSize = 1000000
 
 type sqlStoreToDuckDB struct {
 	to     drivers.OLAPStore
@@ -73,12 +73,14 @@ func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, 
 	start := time.Now()
 	apitime := time.Now()
 	duckdbtime := time.Now()
+	// flushTime := time.Now()
 	s.logger.Info("started transfer from SQL store to duckdb", zap.String("sink_table", dbSink.Table), observability.ZapCtx(ctx))
 	defer func() {
 		s.logger.Info("transfer finished",
 			zap.Duration("duration", time.Since(start)),
 			zap.Bool("success", transferErr == nil),
 			zap.Duration("api_duration", apitime.Sub(start)),
+			// zap.Duration("duckdb_flush__duration", flushTime.Sub(start)),
 			zap.Duration("duckdb_duration", duckdbtime.Sub(start)),
 			observability.ZapCtx(ctx))
 	}()
@@ -107,15 +109,15 @@ func (s *sqlStoreToDuckDB) Transfer(ctx context.Context, source drivers.Source, 
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				if num == _batchSize {
-					p.Observe(_batchSize, drivers.ProgressUnitRecord)
-					num = 0
-					t := time.Now()
-					if err := a.Flush(); err != nil {
-						return err
-					}
-					duckdbtime = duckdbtime.Add(time.Since(t))
-				}
+				// if num == _batchSize {
+				// 	p.Observe(_batchSize, drivers.ProgressUnitRecord)
+				// 	num = 0
+				// 	t := time.Now()
+				// 	if err := a.Flush(); err != nil {
+				// 		return err
+				// 	}
+				// 	flushTime = duckdbtime.Add(time.Since(t))
+				// }
 
 				t := time.Now()
 				row, err := iter.Next(ctx)
