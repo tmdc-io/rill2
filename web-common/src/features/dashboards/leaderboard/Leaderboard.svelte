@@ -7,7 +7,6 @@
    */
   import Tooltip from "@rilldata/web-common/components/tooltip/Tooltip.svelte";
   import TooltipContent from "@rilldata/web-common/components/tooltip/TooltipContent.svelte";
-  import { cancelDashboardQueries } from "@rilldata/web-common/features/dashboards/dashboard-queries";
   import {
     getFilterForDimension,
     useMetaDimension,
@@ -20,7 +19,6 @@
     MetricsViewDimension,
     MetricsViewMeasure,
   } from "@rilldata/web-common/runtime-client";
-  import { useQueryClient } from "@tanstack/svelte-query";
   import { runtime } from "../../../runtime-client/runtime-store";
   import { SortDirection } from "../proto-state/derived-types";
   import { metricsExplorerStore, useDashboardStore } from "../dashboard-stores";
@@ -47,8 +45,6 @@
   export let isSummableMeasure = false;
 
   let slice = 7;
-
-  const queryClient = useQueryClient();
 
   $: dashboardStore = useDashboardStore(metricViewName);
 
@@ -89,18 +85,26 @@
 
   const timeControlsStore = useTimeControlStore(getStateManagers());
 
-  function toggleFilterMode() {
-    cancelDashboardQueries(queryClient, metricViewName);
-    metricsExplorerStore.toggleFilterMode(metricViewName, dimensionName);
-  }
-
   function selectDimension(dimensionName) {
     metricsExplorerStore.setMetricDimensionName(metricViewName, dimensionName);
+  }
+
+  function toggleComparisonDimension(dimensionName, isBeingCompared) {
+    metricsExplorerStore.setComparisonDimension(
+      metricViewName,
+      isBeingCompared ? undefined : dimensionName
+    );
   }
 
   function toggleSort(evt) {
     metricsExplorerStore.toggleSort(metricViewName, evt.detail);
   }
+
+  $: isBeingCompared =
+    $dashboardStore?.selectedComparisonDimension === dimensionName;
+
+  $: isBeingCompared =
+    $dashboardStore?.selectedComparisonDimension === dimensionName;
 
   $: sortAscending = $dashboardStore.sortDirection === SortDirection.ASCENDING;
   $: sortType = $dashboardStore.dashboardSortType;
@@ -158,7 +162,8 @@
       ) ?? [],
       slice,
       activeValues,
-      unfilteredTotal
+      unfilteredTotal,
+      filterExcludeMode
     );
 
     aboveTheFold = leaderboardData.aboveTheFold;
@@ -180,8 +185,9 @@
       {contextColumn}
       isFetching={$sortedQuery.isFetching}
       {displayName}
-      on:toggle-filter-mode={toggleFilterMode}
-      {filterExcludeMode}
+      on:toggle-dimension-comparison={() =>
+        toggleComparisonDimension(dimensionName, isBeingCompared)}
+      {isBeingCompared}
       {hovered}
       {sortAscending}
       {sortType}
@@ -197,6 +203,7 @@
             {itemData}
             {contextColumn}
             {atLeastOneActive}
+            {isBeingCompared}
             {filterExcludeMode}
             {isSummableMeasure}
             {referenceValue}
@@ -214,6 +221,7 @@
               {itemData}
               {contextColumn}
               {atLeastOneActive}
+              {isBeingCompared}
               {filterExcludeMode}
               {isSummableMeasure}
               {referenceValue}
