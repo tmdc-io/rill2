@@ -9,7 +9,6 @@
   import { getContext } from "svelte";
   import type { Tweened } from "svelte/motion";
   import { runtime } from "../../../runtime-client/runtime-store";
-  import MeasuresContainer from "../big-number/MeasuresContainer.svelte";
   import { useDashboardStore } from "web-common/src/features/dashboards/stores/dashboard-stores";
   import DimensionDisplay from "../dimension-table/DimensionDisplay.svelte";
   import Filters from "../filters/Filters.svelte";
@@ -22,6 +21,7 @@
   import DashboardCTAs from "./DashboardCTAs.svelte";
   import DashboardTitle from "./DashboardTitle.svelte";
   import TimeDimensionDisplay from "../time-dimension-details/TimeDimensionDisplay.svelte";
+  import Alert from "../alert/alert.svelte";
 
   export let metricViewName: string;
   export let leftMargin = undefined;
@@ -110,16 +110,7 @@
         class:fixed-metric-height={expandedMeasureName}
         class="overflow-y-scroll pb-8 flex-none"
       >
-        {#key metricViewName}
-          {#if hasTimeSeries}
-            <MetricsTimeSeriesCharts
-              {metricViewName}
-              workspaceWidth={exploreContainerWidth}
-            />
-          {:else}
-            <MeasuresContainer {exploreContainerWidth} {metricViewName} />
-          {/if}
-        {/key}
+        <Alert />
       </div>
 
       <div class="overflow-y-hidden grow {expandedMeasureName ? '' : 'px-4'}">

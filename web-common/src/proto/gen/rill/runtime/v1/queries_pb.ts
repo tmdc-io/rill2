@@ -1991,6 +1991,11 @@ export class MetricsViewFilter extends Message<MetricsViewFilter> {
    */
   exclude: MetricsViewFilter_Cond[] = [];
 
+  /**
+   * @generated from field: repeated string having = 4;
+   */
+  having: string[] = [];
+
   constructor(data?: PartialMessage<MetricsViewFilter>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2001,6 +2006,7 @@ export class MetricsViewFilter extends Message<MetricsViewFilter> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 2, name: "include", kind: "message", T: MetricsViewFilter_Cond, repeated: true },
     { no: 3, name: "exclude", kind: "message", T: MetricsViewFilter_Cond, repeated: true },
+    { no: 4, name: "having", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MetricsViewFilter {

@@ -1155,6 +1155,7 @@ export interface V1MetricsViewRowsResponse {
 export interface V1MetricsViewFilter {
   include?: MetricsViewFilterCond[];
   exclude?: MetricsViewFilterCond[];
+  having?: string[];
 }
 
 export interface V1MetricsViewToplistRequest {

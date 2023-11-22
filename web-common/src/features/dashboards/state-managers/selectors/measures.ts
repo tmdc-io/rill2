@@ -23,4 +23,5 @@ export const measureSelectors = {
    * Gets all visible measures in the dashboard.
    */
   visibleMeasures,
+  allMeasures,
 };

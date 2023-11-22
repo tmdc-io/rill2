@@ -3512,6 +3512,10 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/MetricsViewFilterCond'
+      having:
+        type: array
+        items:
+          type: string
   v1MetricsViewRowsRequest:
     type: object
     properties:

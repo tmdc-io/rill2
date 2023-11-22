@@ -456,6 +456,7 @@ message MetricsViewFilter {
   }
   repeated Cond include = 2;
   repeated Cond exclude = 3;
+  repeated string having = 4;
 }
 
 message MetricsViewColumn {

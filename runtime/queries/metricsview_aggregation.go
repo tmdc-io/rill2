@@ -222,6 +222,11 @@ func (q *MetricsViewAggregation) buildMetricsAggregationSQL(mv *runtimev1.Metric
 		whereClause = "WHERE 1=1" + whereClause
 	}
 
+	havingClause := ""
+	if q.Filter.Having != nil {
+		havingClause = "HAVING " + strings.Join(q.Filter.Having, " AND ")
+	}
+
 	sortingCriteria := make([]string, 0, len(q.Sort))
 	for _, s := range q.Sort {
 		sortCriterion := safeName(s.Name)
@@ -246,12 +251,13 @@ func (q *MetricsViewAggregation) buildMetricsAggregationSQL(mv *runtimev1.Metric
 		limitClause = fmt.Sprintf("LIMIT %d", *q.Limit)
 	}
 
-	sql := fmt.Sprintf("SELECT %s FROM %s %s %s %s %s %s OFFSET %d",
+	sql := fmt.Sprintf("SELECT %s FROM %s %s %s %s %s %s %s OFFSET %d",
 		strings.Join(selectCols, ", "),
 		safeName(mv.Table),
 		strings.Join(unnestClauses, ""),
 		whereClause,
 		groupClause,
+		havingClause,
 		orderClause,
 		limitClause,
 		q.Offset,
