@@ -9,6 +9,7 @@
     $: dimension = ''
     $: measure = ''
     $: havingClause = ''
+    $: limit = "20"
 
     const {
         selectors: {
@@ -46,9 +47,13 @@
                 include: $dashboardStore.filters.include,
                 having: havingQuery
             },
+            sort: [{
+                name: measure,
+                desc: true
+            }],
             timeStart: $timeControlsState.timeStart,
             timeEnd: $timeControlsState.timeEnd,
-            limit: "20",
+            limit: limit,
             offset: "0",
         },
         {
