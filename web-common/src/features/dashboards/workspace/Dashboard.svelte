@@ -17,6 +17,7 @@
   import { selectedMockUserStore } from "../granular-access-policies/stores";
   import LeaderboardDisplay from "../leaderboard/LeaderboardDisplay.svelte";
   import RowsViewerAccordion from "../rows-viewer/RowsViewerAccordion.svelte";
+  import Barchart from "../barchart/barchart.svelte";
   import TimeControls from "../time-controls/TimeControls.svelte";
   import MetricsTimeSeriesCharts from "../time-series/MetricsTimeSeriesCharts.svelte";
   import DashboardCTAs from "./DashboardCTAs.svelte";
@@ -37,6 +38,7 @@
     metricViewName
   );
   $: hasTimeSeries = $metricTimeSeries.data;
+  $: hideDetail = (!selectedDimensionName || !expandedMeasureName)
 
   // flex-row flex-col
   $: dashboardAlignment = expandedMeasureName ? "col" : "row";
@@ -103,33 +105,37 @@
     <MockUserHasNoAccess />
   {:else}
     <div
-      class="flex gap-x-1 h-full overflow-hidden flex-{dashboardAlignment}"
+      class="flex flex-row gap-8 divide-solid divide-x"
       style:padding-left={leftSide}
     >
-      <div
-        class:fixed-metric-height={expandedMeasureName}
-        class="overflow-y-scroll pb-8 flex-none"
-      >
+      <div class="overflow-y-scroll pb-4 basis-1/4">
         {#key metricViewName}
-          {#if hasTimeSeries}
             <MetricsTimeSeriesCharts
               {metricViewName}
               workspaceWidth={exploreContainerWidth}
             />
-          {:else}
-            <MeasuresContainer {exploreContainerWidth} {metricViewName} />
-          {/if}
         {/key}
       </div>
 
-      <div class="overflow-y-hidden grow {expandedMeasureName ? '' : 'px-4'}">
+      
         {#if expandedMeasureName}
+        <div class="basis-1/2 px-4">
+          {#key metricViewName}
+          <MetricsTimeSeriesCharts
+            {metricViewName}
+            workspaceWidth={exploreContainerWidth}
+          />
+      {/key}
           <TimeDimensionDisplay {metricViewName} />
+        </div>
         {:else if selectedDimensionName}
+        <div class="basis-1/2 px-4">
+          <Barchart />
           <DimensionDisplay />
-        {:else}
-          <LeaderboardDisplay />
+        </div>
         {/if}
+      <div class="overflow-y-hidden grow">
+        <LeaderboardDisplay />
       </div>
     </div>
 

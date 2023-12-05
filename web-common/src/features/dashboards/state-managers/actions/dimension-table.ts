@@ -36,6 +36,17 @@ export const setDimensionTableSearchString = (
   generalArgs.dashboard.dimensionSearchText = searchString;
 };
 
+export const setHavingFilter = (
+  generalArgs: DashboardMutables,
+  name: string,
+  expression: string,
+) => {
+  generalArgs.dashboard.filters.having = [{
+    name,
+    eq: expression,
+  }]
+}
+
 export const dimensionTableActions = {
   /**
    * handles clicking on a measure column header in the dimension
@@ -56,4 +67,5 @@ export const dimensionTableActions = {
   clearDimensionTableSearchString: (generalArgs: DashboardMutables) => {
     setDimensionTableSearchString(generalArgs, undefined);
   },
+  setHavingFilter
 };

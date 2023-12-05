@@ -45,11 +45,6 @@
   style:height="calc(100vh - 130px - 4rem)"
   style:min-width="365px"
 >
-  <div
-    class="grid grid-auto-cols justify-between grid-flow-col items-center pl-1 pb-3 flex-grow-0"
-  >
-    <LeaderboardControls metricViewName={$metricsViewName} />
-  </div>
   <div class="grow overflow-hidden">
     {#if $visibleDimensions.length > 0}
       <VirtualizedGrid

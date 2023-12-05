@@ -82,6 +82,7 @@ func metricsQuery(ctx context.Context, olap drivers.OLAPStore, priority int, sql
 }
 
 func olapQuery(ctx context.Context, olap drivers.OLAPStore, priority int, sql string, args []any) (*runtimev1.StructType, []*structpb.Struct, error) {
+	fmt.Println(sql, args)
 	rows, err := olap.Execute(ctx, &drivers.Statement{
 		Query:            sql,
 		Args:             args,
@@ -168,6 +169,38 @@ func buildFilterClauseForMetricsViewFilter(mv *runtimev1.MetricsViewSpec, filter
 	}
 
 	return strings.Join(clauses, " "), args, nil
+}
+
+func buildHavingClauseForConditions(mv *runtimev1.MetricsViewSpec, conds []*runtimev1.MetricsViewFilter_HavingCond) (string, error) {
+	var clauses []string
+
+	for _, cond := range conds {
+		condClause, err := buildFilterHavingClauseForCondition(mv, cond)
+		if err != nil {
+			return "", err
+		}
+		if condClause == "" {
+			continue
+		}
+		clauses = append(clauses, condClause)
+	}
+
+	return strings.Join(clauses, " "), nil
+
+}
+
+func buildFilterHavingClauseForCondition(mv *runtimev1.MetricsViewSpec, cond *runtimev1.MetricsViewFilter_HavingCond) (string, error) {
+	expression, err := metricsViewMeasureExpression(mv, cond.Name)
+	if err != nil {
+		return "", err
+	}
+
+	if len(cond.Eq) > 0 {
+		fmt.Printf("AND %s %s", expression, cond.Eq)
+		return fmt.Sprintf("AND %s %s", expression, cond.Eq), nil
+	}
+
+	return "", nil
 }
 
 // buildFilterClauseForConditions returns a string with the format "AND (...) AND (...) ..."

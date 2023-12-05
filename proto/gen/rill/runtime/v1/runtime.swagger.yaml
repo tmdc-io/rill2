@@ -2322,6 +2322,13 @@ definitions:
         type: array
         items:
           type: string
+  MetricsViewFilterHavingCond:
+    type: object
+    properties:
+      name:
+        type: string
+      eq:
+        type: string
   MetricsViewMeasure:
     type: object
     properties:
@@ -3512,6 +3519,11 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/MetricsViewFilterCond'
+      having:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/MetricsViewFilterHavingCond'
   v1MetricsViewRowsRequest:
     type: object
     properties:

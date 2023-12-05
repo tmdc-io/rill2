@@ -54,6 +54,7 @@ export function getDashboardStateFromProto(
     filters: {
       include: [],
       exclude: [],
+      having: []
     },
   };
 
@@ -61,6 +62,7 @@ export function getDashboardStateFromProto(
     entity.filters ??= {};
     entity.filters.include = fromFiltersProto(dashboard.filters.include);
     entity.filters.exclude = fromFiltersProto(dashboard.filters.exclude);
+    entity.filters.having = fromFiltersProto(dashboard.filters.having)
   }
   if (dashboard.compareTimeRange) {
     entity.selectedComparisonTimeRange = fromTimeRangeProto(

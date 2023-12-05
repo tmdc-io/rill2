@@ -36,6 +36,7 @@ export function clearAllFilters(ctx: StateManagers) {
     ctx.updateDashboard((dashboard) => {
       dashboard.filters.include = [];
       dashboard.filters.exclude = [];
+      dashboard.filters.having = [];
       dashboard.dimensionFilterExcludeMode.clear();
       dashboard.pinIndex = -1;
     });

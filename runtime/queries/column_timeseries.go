@@ -113,6 +113,14 @@ func (q *ColumnTimeseries) Resolve(ctx context.Context, rt *runtime.Runtime, ins
 			filter = "WHERE 1=1 " + filter
 		}
 
+		havingClause := ""
+		if q.MetricsViewFilter.Having != nil {
+			having, err := buildHavingClauseForConditions(q.MetricsView, q.MetricsViewFilter.Having)
+			if err != nil {
+				havingClause = "HAVING " + having
+			}
+		}
+
 		measures := normaliseMeasures(q.Measures, q.Pixels != 0)
 		dateTruncSpecifier := convertToDateTruncSpecifier(timeRange.Interval)
 		tsAlias := tempName("_ts_")
@@ -167,7 +175,7 @@ func (q *ColumnTimeseries) Resolve(ctx context.Context, rt *runtime.Runtime, ins
 			SELECT
 				date_trunc('` + dateTruncSpecifier + `', timezone(?, ` + safeName(q.TimestampColumnName) + `::TIMESTAMPTZ) ` + timeOffsetClause1 + `) ` + timeOffsetClause2 + ` as ` + tsAlias + `,` + getExpressionColumnsFromMeasures(measures) + `
 			FROM ` + safeName(q.TableName) + ` ` + filter + `
-			GROUP BY ` + tsAlias + ` ORDER BY ` + tsAlias + `
+			GROUP BY ` + tsAlias + ` ` + havingClause + ` ORDER BY ` + tsAlias + `
 			)
 			-- an additional grouping is required for time zone DST (see unit tests for examples)
 			SELECT ` + tsAlias + `,` + getCoalesceStatementsMeasuresLast(measures) + ` FROM (

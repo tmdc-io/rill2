@@ -249,12 +249,22 @@ func (q *MetricsViewToplist) buildMetricsTopListSQL(mv *runtimev1.MetricsViewSpe
 		groupByCol = unnestColName
 	}
 
-	sql := fmt.Sprintf("SELECT %s FROM %s %s WHERE %s GROUP BY %s %s %s OFFSET %d",
+	havingClause := ""
+	if q.Filter.Having != nil {
+		having, err := buildHavingClauseForConditions(mv, q.Filter.Having)
+		if err != nil {
+			return "", nil, err
+		}
+		havingClause = "HAVING 1=1 " + having
+	}
+
+	sql := fmt.Sprintf("SELECT %s FROM %s %s WHERE %s GROUP BY %s %s %s %s OFFSET %d",
 		strings.Join(selectCols, ", "),
 		safeName(mv.Table),
 		unnestClause,
 		whereClause,
 		groupByCol,
+		havingClause,
 		orderClause,
 		limitClause,
 		q.Offset,

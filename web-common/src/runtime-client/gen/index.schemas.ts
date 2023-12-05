@@ -1081,20 +1081,15 @@ export interface V1MetricsViewV2 {
 
 export type V1MetricsViewTotalsResponseData = { [key: string]: any };
 
+export interface V1MetricsViewColumn {
+  name?: string;
+  type?: string;
+  nullable?: boolean;
+}
+
 export interface V1MetricsViewTotalsResponse {
   meta?: V1MetricsViewColumn[];
   data?: V1MetricsViewTotalsResponseData;
-}
-
-export interface V1MetricsViewTotalsRequest {
-  instanceId?: string;
-  metricsViewName?: string;
-  measureNames?: string[];
-  inlineMeasures?: V1InlineMeasure[];
-  timeStart?: string;
-  timeEnd?: string;
-  filter?: V1MetricsViewFilter;
-  priority?: number;
 }
 
 export type V1MetricsViewToplistResponseDataItem = { [key: string]: any };
@@ -1155,6 +1150,18 @@ export interface V1MetricsViewRowsResponse {
 export interface V1MetricsViewFilter {
   include?: MetricsViewFilterCond[];
   exclude?: MetricsViewFilterCond[];
+  having?: MetricsViewFilterHavingCond[];
+}
+
+export interface V1MetricsViewTotalsRequest {
+  instanceId?: string;
+  metricsViewName?: string;
+  measureNames?: string[];
+  inlineMeasures?: V1InlineMeasure[];
+  timeStart?: string;
+  timeEnd?: string;
+  filter?: V1MetricsViewFilter;
+  priority?: number;
 }
 
 export interface V1MetricsViewToplistRequest {
@@ -1237,12 +1244,6 @@ export interface V1MetricsViewComparisonRow {
 
 export interface V1MetricsViewComparisonResponse {
   rows?: V1MetricsViewComparisonRow[];
-}
-
-export interface V1MetricsViewColumn {
-  name?: string;
-  type?: string;
-  nullable?: boolean;
 }
 
 export interface V1MetricsViewAggregationSort {
@@ -1577,11 +1578,6 @@ export interface V1Connector {
   config?: V1ConnectorConfig;
 }
 
-export interface V1CategoricalSummary {
-  topK?: V1TopK;
-  cardinality?: number;
-}
-
 export interface V1ColumnTopKResponse {
   categoricalSummary?: V1CategoricalSummary;
 }
@@ -1700,6 +1696,11 @@ export interface V1ColumnCardinalityRequest {
   tableName?: string;
   columnName?: string;
   priority?: number;
+}
+
+export interface V1CategoricalSummary {
+  topK?: V1TopK;
+  cardinality?: number;
 }
 
 export interface V1CatalogEntry {
@@ -1909,6 +1910,11 @@ export interface MetricsViewMeasure {
   description?: string;
   format?: string;
   validPercentOfTotal?: boolean;
+}
+
+export interface MetricsViewFilterHavingCond {
+  name?: string;
+  eq?: string;
 }
 
 export interface MetricsViewFilterCond {

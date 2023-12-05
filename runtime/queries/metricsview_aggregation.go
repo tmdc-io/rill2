@@ -201,6 +201,15 @@ func (q *MetricsViewAggregation) buildMetricsAggregationSQL(mv *runtimev1.Metric
 		groupClause = "GROUP BY " + strings.Join(groupCols, ", ")
 	}
 
+	havingClause := ""
+	if q.Filter.Having != nil {
+		having, err := buildHavingClauseForConditions(mv, q.Filter.Having)
+		if err != nil {
+			return "", nil, err
+		}
+		havingClause = "HAVING 1=1 " + having
+	}
+
 	whereClause := ""
 	if mv.TimeDimension != "" {
 		timeCol := safeName(mv.TimeDimension)
@@ -246,12 +255,13 @@ func (q *MetricsViewAggregation) buildMetricsAggregationSQL(mv *runtimev1.Metric
 		limitClause = fmt.Sprintf("LIMIT %d", *q.Limit)
 	}
 
-	sql := fmt.Sprintf("SELECT %s FROM %s %s %s %s %s %s OFFSET %d",
+	sql := fmt.Sprintf("SELECT %s FROM %s %s %s %s %s %s %s OFFSET %d",
 		strings.Join(selectCols, ", "),
 		safeName(mv.Table),
 		strings.Join(unnestClauses, ""),
 		whereClause,
 		groupClause,
+		havingClause,
 		orderClause,
 		limitClause,
 		q.Offset,

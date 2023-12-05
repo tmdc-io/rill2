@@ -560,10 +560,20 @@ const metricViewReducers = {
     });
   },
 
+  setHavingFilter(name: string, measureName: string, expression: string) {
+    updateMetricsExplorerByName(name, (metricsExplorer) => {
+      metricsExplorer.filters.having = [{
+        name: measureName,
+        eq: expression
+      }]
+    })
+  },
+
   clearFilters(name: string) {
     updateMetricsExplorerByName(name, (metricsExplorer) => {
       metricsExplorer.filters.include = [];
       metricsExplorer.filters.exclude = [];
+      metricsExplorer.filters.having = [];
       metricsExplorer.dimensionFilterExcludeMode.clear();
       metricsExplorer.pinIndex = -1;
     });

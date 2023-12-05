@@ -1991,6 +1991,11 @@ export class MetricsViewFilter extends Message<MetricsViewFilter> {
    */
   exclude: MetricsViewFilter_Cond[] = [];
 
+  /**
+   * @generated from field: repeated rill.runtime.v1.MetricsViewFilter.HavingCond having = 4;
+   */
+  having: MetricsViewFilter_HavingCond[] = [];
+
   constructor(data?: PartialMessage<MetricsViewFilter>) {
     super();
     proto3.util.initPartial(data, this);
@@ -2001,6 +2006,7 @@ export class MetricsViewFilter extends Message<MetricsViewFilter> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 2, name: "include", kind: "message", T: MetricsViewFilter_Cond, repeated: true },
     { no: 3, name: "exclude", kind: "message", T: MetricsViewFilter_Cond, repeated: true },
+    { no: 4, name: "having", kind: "message", T: MetricsViewFilter_HavingCond, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MetricsViewFilter {
@@ -2066,6 +2072,49 @@ export class MetricsViewFilter_Cond extends Message<MetricsViewFilter_Cond> {
 
   static equals(a: MetricsViewFilter_Cond | PlainMessage<MetricsViewFilter_Cond> | undefined, b: MetricsViewFilter_Cond | PlainMessage<MetricsViewFilter_Cond> | undefined): boolean {
     return proto3.util.equals(MetricsViewFilter_Cond, a, b);
+  }
+}
+
+/**
+ * @generated from message rill.runtime.v1.MetricsViewFilter.HavingCond
+ */
+export class MetricsViewFilter_HavingCond extends Message<MetricsViewFilter_HavingCond> {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name = "";
+
+  /**
+   * @generated from field: string eq = 2;
+   */
+  eq = "";
+
+  constructor(data?: PartialMessage<MetricsViewFilter_HavingCond>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "rill.runtime.v1.MetricsViewFilter.HavingCond";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "eq", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MetricsViewFilter_HavingCond {
+    return new MetricsViewFilter_HavingCond().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MetricsViewFilter_HavingCond {
+    return new MetricsViewFilter_HavingCond().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MetricsViewFilter_HavingCond {
+    return new MetricsViewFilter_HavingCond().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: MetricsViewFilter_HavingCond | PlainMessage<MetricsViewFilter_HavingCond> | undefined, b: MetricsViewFilter_HavingCond | PlainMessage<MetricsViewFilter_HavingCond> | undefined): boolean {
+    return proto3.util.equals(MetricsViewFilter_HavingCond, a, b);
   }
 }
 

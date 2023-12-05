@@ -454,8 +454,13 @@ message MetricsViewFilter {
     repeated google.protobuf.Value in = 2;
     repeated string like = 3;
   }
+  message HavingCond {
+    string name = 1;
+    string eq = 2;
+  }
   repeated Cond include = 2;
   repeated Cond exclude = 3;
+  repeated HavingCond having = 4;
 }
 
 message MetricsViewColumn {

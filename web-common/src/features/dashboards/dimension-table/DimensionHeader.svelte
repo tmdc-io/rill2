@@ -36,15 +36,18 @@
       sorting: { sortedByDimensionValue },
       dimensionTable: { dimensionTableSearchString },
       dimensionFilters: { isFilterExcludeMode },
+      
     },
     actions: {
       sorting: { toggleSort },
       dimensionTable: {
         setDimensionTableSearchString,
+        setHavingFilter,
         clearDimensionTableSearchString,
       },
       dimensions: { setPrimaryDimension },
     },
+    dashboardStore,
     metricsViewName,
   } = stateManagers;
 
@@ -61,22 +64,19 @@
   // but there is no way to make the <Search> component a fully
   // "controlled" component for now, so we have to go through the
   // `value` binding it exposes.
-  let searchText: string | undefined = undefined;
+  let searchText: string;
   $: searchText = $dimensionTableSearchString;
   function onSearch() {
-    setDimensionTableSearchString(searchText);
   }
-
+  
   function closeSearchBar() {
     clearDimensionTableSearchString();
     searchBarOpen = false;
   }
-
+  
   function onSubmit() {
-    if (!areAllTableRowsSelected) {
-      dispatch("toggle-all-search-items");
+      setHavingFilter("test", " > 1000000")
       closeSearchBar();
-    }
   }
 
   const goBackToLeaderboard = () => {

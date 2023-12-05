@@ -114,9 +114,10 @@ export const getFiltersForOtherDimensions = (
   filters: V1MetricsViewFilter,
   dimensionName?: string
 ) => {
-  if (!filters) return { include: [], exclude: [] };
+  if (!filters) return { include: [], exclude: [], having: [] };
 
   const filter: V1MetricsViewFilter = {
+    having: filters.having,
     include:
       filters.include
         ?.filter((dimensionValues) => dimensionName !== dimensionValues.name)
