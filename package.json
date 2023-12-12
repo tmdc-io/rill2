@@ -26,5 +26,8 @@
       "package.json",
       "web-local/package.json"
     ]
+  },
+  "dependencies": {
+    "vite": "^4.5.1"
   }
 }

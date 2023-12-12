@@ -50,7 +50,17 @@
   let rows: any;
   $: rows = $data.data?.data?.map(d => Object.values(d))
   $: if ($data.isSuccess && rows?.length && headers?.length) {
-    renderChart([headers, ...rows])
+    if (p) {
+      p.update({
+        settings: getSettings(),
+        data: {
+          type: "matrix",
+          data: [headers, ...rows]
+        }
+      })
+    } else {
+      renderChart([headers, ...rows])
+    }
   }
   const getSettings = () => ({
     scales: {
@@ -75,6 +85,10 @@
       {
         key: "bars",
         type: "box",
+        animations: {
+          enabled: true,
+          trackBy: (node) => node.data.value,
+        },
         data: {
           extract: {
             field: 0,
