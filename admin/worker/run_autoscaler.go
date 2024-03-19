@@ -2,7 +2,9 @@ package worker
 
 import (
 	"context"
+	"time"
 
+	"github.com/rilldata/rill/admin/database"
 	"github.com/rilldata/rill/admin/metrics"
 	"go.uber.org/zap"
 )
@@ -18,10 +20,23 @@ func (w *Worker) runAutoscaler(ctx context.Context) error {
 	}
 
 	for _, rec := range recs {
-		// TODO: Add autoscaling logic based on the recommendation here.
-		// Consider checking rec.UpdatedOn to avoid making autoscaling decision on stale data!
-		w.logger.Info("autoscaler recommendation", zap.String("project_id", rec.ProjectID), zap.Int("recommended_slots", rec.RecommendedSlots))
-		break
+		duration := time.Since(rec.UpdatedOn)
+		if duration < 24*time.Hour {
+			w.logger.Debug("skipping autoscaler: the project has been scaled recently", zap.String("project_id", rec.ProjectID), zap.Time("project_updated_on", rec.UpdatedOn))
+			break
+		}
+
+		opts := &database.UpdateProjectOptions{
+			ProdSlots: rec.RecommendedSlots,
+		}
+
+		proj, err := w.admin.DB.UpdateProject(ctx, rec.ProjectID, opts)
+		if err != nil {
+			w.logger.Warn("failed to autoscale:", zap.String("project_id", rec.ProjectID), zap.Error(err))
+			return err
+		}
+
+		w.logger.Debug("succeeded in autoscaling:", zap.String("project_id", proj.Name), zap.Int("project_slots", proj.ProdSlots))
 	}
 
 	return nil
