@@ -45,7 +45,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer | {sourceName}</title>
+  <title>{sourceName}</title>
 </svelte:head>
 
 <SourceWorkspace {sourceName} />

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../layout/navigation/navigation-utils";
   import { page } from "$app/stores";
   import Cancel from "@rilldata/web-common/components/icons/Cancel.svelte";
   import EditIcon from "@rilldata/web-common/components/icons/EditIcon.svelte";
@@ -258,14 +258,14 @@
         </svelte:fragment>
       </NavigationEntry>
     {/each}
-    {#if canAddDashboard}
-      <AddAssetButton
-        id="add-dashboard"
-        label="Add dashboard"
-        bold={hasSourceAndModelButNoDashboards ?? false}
-        on:click={() => dispatchAddEmptyMetricsDef()}
-      />
-    {/if}
+    <!--{#if canAddDashboard}-->
+    <!--  <AddAssetButton-->
+    <!--    id="add-dashboard"-->
+    <!--    label="Add dashboard"-->
+    <!--    bold={hasSourceAndModelButNoDashboards ?? false}-->
+    <!--    on:click={() => dispatchAddEmptyMetricsDef()}-->
+    <!--  />-->
+    <!--{/if}-->
   </div>
   {#if showRenameMetricsDefinitionModal && renameMetricsDefName}
     <RenameAssetModal

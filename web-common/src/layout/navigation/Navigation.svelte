@@ -18,7 +18,7 @@
   import { runtime } from "../../runtime-client/runtime-store";
   import { DEFAULT_NAV_WIDTH } from "../config";
   import { drag } from "../drag";
-  import Footer from "./Footer.svelte";
+  // import Footer from "./Footer.svelte";
   import SurfaceControlButton from "./SurfaceControlButton.svelte";
   import { portal } from "@rilldata/web-common/lib/actions/portal";
 
@@ -132,7 +132,7 @@
           <OtherFiles />
         {/if}
       </div>
-      <Footer />
+<!--      <Footer />-->
     </div>
   </div>
 </div>

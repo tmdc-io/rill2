@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../../../lib/util/navigation";
   import { page } from "$app/stores";
   import { Dashboard } from "@rilldata/web-common/features/dashboards";
   import DashboardStateProvider from "@rilldata/web-common/features/dashboards/stores/DashboardStateProvider.svelte";
@@ -86,7 +86,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer | {metricViewName}</title>
+  <title>{metricViewName}</title>
 </svelte:head>
 
 {#if ($fileQuery.data && $resourceStatusStore.status === ResourceStatus.Idle) || showErrorPage}

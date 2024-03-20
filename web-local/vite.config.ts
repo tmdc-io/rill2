@@ -7,7 +7,8 @@ dns.setDefaultResultOrder("verbatim");
 
 let runtimeUrl = "";
 try {
-  runtimeUrl = process.env.RILL_DEV ? "http://localhost:9009" : "";
+  // runtimeUrl = process.env.RILL_DEV ? "http://localhost:9009" + (process.env.BASE_PATH ? "/" + process.env.BASE_PATH : "") : "";
+  runtimeUrl = "http://localhost:9009/" + process.env.BASE_PATH;
 } catch (e) {
   console.error(e);
 }
@@ -19,6 +20,9 @@ const config = defineConfig(({ mode }) => ({
       // This is necessary because the Scheduled Reports dialog lives in `web-common` and imports the admin-client.
       external: (id) => id.startsWith("@rilldata/web-admin/"),
     },
+    ...(process.env.BASE_PATH ? {
+      base: `/${process.env.BASE_PATH}/`
+    }: {})
   },
   resolve: {
     alias: {

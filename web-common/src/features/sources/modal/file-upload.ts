@@ -1,4 +1,4 @@
-import { goto } from "$app/navigation";
+import { goto } from "../../../layout/navigation/navigation-utils";
 import { notifications } from "@rilldata/web-common/components/notifications";
 import {
   duplicateNameChecker,

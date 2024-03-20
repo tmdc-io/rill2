@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../../layout/navigation/navigation-utils";
   import { WithTogglableFloatingElement } from "@rilldata/web-common/components/floating-element";
   import { updateDevJWT } from "@rilldata/web-common/features/dashboards/granular-access-policies/updateDevJWT";
   import { useQueryClient } from "@tanstack/svelte-query";

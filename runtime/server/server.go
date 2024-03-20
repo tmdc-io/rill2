@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -206,6 +207,15 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 
 	// Add gRPC-gateway on httpMux
 	httpMux.Handle("/v1/", gwMux)
+
+	// Serve frontend files from a basePath
+	basePath := os.Getenv("BASE_PATH")
+	if basePath != "" {
+		basePath = fmt.Sprintf("/%s/", basePath)
+		frontendHandler := http.StripPrefix(basePath, http.FileServer(http.Dir("cli/pkg/web/embed/dist")))
+		fmt.Printf("basepath ->> %s", basePath)
+		httpMux.Handle(basePath, frontendHandler)
+	}
 
 	// Add HTTP handler for query export downloads
 	observability.MuxHandle(httpMux, "/v1/download", observability.Middleware("runtime", s.logger, auth.HTTPMiddleware(s.aud, http.HandlerFunc(s.downloadHandler))))

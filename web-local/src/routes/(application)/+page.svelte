@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer</title>
+  <title></title>
 </svelte:head>
 
 <OnboardingWorkspace />

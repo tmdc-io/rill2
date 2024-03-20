@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import ContextButton from "@rilldata/web-common/components/column-profile/ContextButton.svelte";
   import ExpanderButton from "@rilldata/web-common/components/column-profile/ExpanderButton.svelte";
   import { WithTogglableFloatingElement } from "@rilldata/web-common/components/floating-element";
@@ -56,6 +57,8 @@
    */
   $: pathname = $currentHref.split("/").slice(0, 3).join("/");
   $: isActive = pathname === href;
+
+  $: href = `${base}${href}`
 </script>
 
 <Tooltip

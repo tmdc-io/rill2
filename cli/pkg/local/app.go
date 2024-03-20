@@ -439,7 +439,7 @@ func (a *App) pollServer(ctx context.Context, httpPort int, openOnHealthy, secur
 	}
 
 	// Health check succeeded
-	a.Logger.Infof("Serving Rill on: %s", uri)
+	a.Logger.Infof("Serving Rill on: %s/%s", uri, os.Getenv("BASE_PATH"))
 	if openOnHealthy {
 		err := browser.Open(uri)
 		if err != nil {

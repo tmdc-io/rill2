@@ -45,7 +45,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer | {metricViewName}</title>
+  <title>{metricViewName}</title>
 </svelte:head>
 
 {#if $fileQuery.data && yaml !== undefined}

@@ -1,4 +1,4 @@
-import { goto } from "$app/navigation";
+import { goto } from "../../../layout/navigation/navigation-utils";
 import { get } from "svelte/store";
 import { notifications } from "../../../components/notifications";
 import { appScreen } from "../../../layout/app-store";

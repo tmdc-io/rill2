@@ -8,7 +8,7 @@
   - continuously: If the user deletes the `rill.yaml` file, they are immediately redirected to the Welcome page.
 -->
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../layout/navigation/navigation-utils";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import { onMount } from "svelte";
   import {

@@ -33,7 +33,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer | {chartName}</title>
+  <title>{chartName}</title>
 </svelte:head>
 
 {#if $fileQuery.data && yaml !== undefined}
