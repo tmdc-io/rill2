@@ -201,20 +201,15 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 	// Call callback to register additional paths
 	// NOTE: This is so ugly, but not worth refactoring it properly right now.
 	httpMux := http.NewServeMux()
+
 	// note - apiBasePath must not end with '/'
 	getApiRouterForBasePath := func(apiBasePath string) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			//fmt.Printf("the custom handler invoked... for: method: %s, url: %s\n", r.Method, r.URL.Path)
 			if strings.HasPrefix(r.URL.Path, apiBasePath) {
 				// Rewrite the path to /v1;
 				r.URL.Path = strings.TrimPrefix(r.URL.Path, apiBasePath)
-				// Optionally, set the path back to "/" to serve everything from the root
-				// r.URL.Path = "/"
 				// Serve the request using the main mux
 				httpMux.ServeHTTP(w, r)
-			} else {
-				// Handle other requests as usual (optional)
-				// w.WriteHeader(http.StatusNotFound)
 			}
 		}
 	}
@@ -224,16 +219,16 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 		apiBasePath = strings.TrimSuffix(apiBasePath, "/")
 		// here - pattern must end with a '/'; getApiRouterForBasePath requires a sub path without trailing '/'
 		httpMux.Handle(fmt.Sprintf("%s/", apiBasePath), getApiRouterForBasePath(apiBasePath))
-		if registerAdditionalHandlers != nil {
-			registerAdditionalHandlers(httpMux)
-		}
+	}
+	if registerAdditionalHandlers != nil {
+		registerAdditionalHandlers(httpMux)
 	}
 
 	// Add gRPC-gateway on httpMux
 	httpMux.Handle("/v1/", gwMux)
 
 	// Serve frontend files from a basePath
-	basePath := os.Getenv("BASE_PATH")
+	basePath := os.Getenv("APP_BASE_PATH")
 	if len(basePath) > 0 {
 		basePath = fmt.Sprintf("/%s/", basePath)
 		frontendHandler := http.StripPrefix(basePath, http.FileServer(http.Dir("cli/pkg/web/embed/dist")))
