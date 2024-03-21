@@ -201,8 +201,32 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 	// Call callback to register additional paths
 	// NOTE: This is so ugly, but not worth refactoring it properly right now.
 	httpMux := http.NewServeMux()
-	if registerAdditionalHandlers != nil {
-		registerAdditionalHandlers(httpMux)
+	// note - apiBasePath must not end with '/'
+	getApiRouterForBasePath := func(apiBasePath string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			//fmt.Printf("the custom handler invoked... for: method: %s, url: %s\n", r.Method, r.URL.Path)
+			if strings.HasPrefix(r.URL.Path, apiBasePath) {
+				// Rewrite the path to /v1;
+				r.URL.Path = strings.TrimPrefix(r.URL.Path, apiBasePath)
+				// Optionally, set the path back to "/" to serve everything from the root
+				// r.URL.Path = "/"
+				// Serve the request using the main mux
+				httpMux.ServeHTTP(w, r)
+			} else {
+				// Handle other requests as usual (optional)
+				// w.WriteHeader(http.StatusNotFound)
+			}
+		}
+	}
+	// api base path that works - /modern-rill/api/
+	apiBasePath := os.Getenv("API_BASE_PATH")
+	if len(apiBasePath) > 0 {
+		apiBasePath = strings.TrimSuffix(apiBasePath, "/")
+		// here - pattern must end with a '/'; getApiRouterForBasePath requires a sub path without trailing '/'
+		httpMux.Handle(fmt.Sprintf("%s/", apiBasePath), getApiRouterForBasePath(apiBasePath))
+		if registerAdditionalHandlers != nil {
+			registerAdditionalHandlers(httpMux)
+		}
 	}
 
 	// Add gRPC-gateway on httpMux

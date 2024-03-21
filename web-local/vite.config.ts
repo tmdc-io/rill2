@@ -8,7 +8,7 @@ dns.setDefaultResultOrder("verbatim");
 let runtimeUrl = "";
 try {
   // runtimeUrl = process.env.RILL_DEV ? "http://localhost:9009" + (process.env.BASE_PATH ? "/" + process.env.BASE_PATH : "") : "";
-  runtimeUrl = "http://localhost:9009/" + process.env.BASE_PATH;
+  runtimeUrl = "http://localhost:9009" + process.env.API_BASE_PATH;
 } catch (e) {
   console.error(e);
 }
