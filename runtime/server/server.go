@@ -234,7 +234,7 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 
 	// Serve frontend files from a basePath
 	basePath := os.Getenv("BASE_PATH")
-	if basePath != "" {
+	if len(basePath) > 0 {
 		basePath = fmt.Sprintf("/%s/", basePath)
 		frontendHandler := http.StripPrefix(basePath, http.FileServer(http.Dir("cli/pkg/web/embed/dist")))
 		fmt.Printf("basepath ->> %s", basePath)
