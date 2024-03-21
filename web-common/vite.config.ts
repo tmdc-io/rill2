@@ -46,8 +46,8 @@ export default defineConfig(({ mode }) => {
       },
       environment: "jsdom",
     },
-    ...(process.env.BASE_PATH ? {
-      base: `/${process.env.BASE_PATH}/`
+    ...(process.env.APP_BASE_PATH ? {
+      base: `/${process.env.APP_BASE_PATH}/`
     }: {})
   };
 });

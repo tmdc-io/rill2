@@ -2,10 +2,10 @@ import preprocess from "svelte-preprocess";
 
 const config = {
   preprocess: preprocess(),
-  ...(process.env.BASE_PATH ? {
+  ...(process.env.APP_BASE_PATH ? {
     kit: {
       paths: {
-        base: `/${process.env.BASE_PATH}`,
+        base: `/${process.env.APP_BASE_PATH}`,
         relative: true,
       },
     }

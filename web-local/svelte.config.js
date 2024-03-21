@@ -14,9 +14,9 @@ const config = {
     files: {
       assets: "../web-common/static",
     },
-    ...(process.env.BASE_PATH ? {
+    ...(process.env.APP_BASE_PATH ? {
       paths: {
-        base: `/${process.env.BASE_PATH}`,
+        base: `/${process.env.APP_BASE_PATH}`,
         relative: true,
       }
     }: {})
