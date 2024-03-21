@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rilldata/rill/cli/pkg/web"
 	"net/http"
 	"os"
 	"strings"
@@ -202,39 +203,35 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 	// NOTE: This is so ugly, but not worth refactoring it properly right now.
 	httpMux := http.NewServeMux()
 
-	// note - apiBasePath must not end with '/'
-	getApiRouterForBasePath := func(apiBasePath string) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			if strings.HasPrefix(r.URL.Path, apiBasePath) {
-				// Rewrite the path to /v1;
-				r.URL.Path = strings.TrimPrefix(r.URL.Path, apiBasePath)
-				// Serve the request using the main mux
-				httpMux.ServeHTTP(w, r)
+	basePath := os.Getenv("BASE_PATH")
+	if len(basePath) > 0 {
+		// Trimmed basePath
+		basePath = strings.TrimPrefix(strings.TrimSuffix(basePath, "/"), "/")
+		apiBasePath := fmt.Sprintf("/%s/api", basePath)
+		webBasePath := fmt.Sprintf("/%s/", basePath)
+
+		_getRouter := func() http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasPrefix(r.URL.Path, apiBasePath) {
+					// Rewrite the path to /v1;
+					r.URL.Path = strings.TrimPrefix(r.URL.Path, apiBasePath)
+					// Serve the request using the main mux
+					httpMux.ServeHTTP(w, r)
+				}
 			}
 		}
+		// API
+		httpMux.Handle(fmt.Sprintf("%s/", apiBasePath), _getRouter())
+		// WEB
+		httpMux.Handle(webBasePath, http.StripPrefix(webBasePath, web.StaticHandler()))
 	}
-	// api base path that works - /modern-rill/api/
-	apiBasePath := os.Getenv("API_BASE_PATH")
-	if len(apiBasePath) > 0 {
-		apiBasePath = strings.TrimSuffix(apiBasePath, "/")
-		// here - pattern must end with a '/'; getApiRouterForBasePath requires a sub path without trailing '/'
-		httpMux.Handle(fmt.Sprintf("%s/", apiBasePath), getApiRouterForBasePath(apiBasePath))
-	}
+
 	if registerAdditionalHandlers != nil {
 		registerAdditionalHandlers(httpMux)
 	}
 
 	// Add gRPC-gateway on httpMux
 	httpMux.Handle("/v1/", gwMux)
-
-	// Serve frontend files from a basePath
-	basePath := os.Getenv("APP_BASE_PATH")
-	if len(basePath) > 0 {
-		basePath = fmt.Sprintf("/%s/", basePath)
-		frontendHandler := http.StripPrefix(basePath, http.FileServer(http.Dir("cli/pkg/web/embed/dist")))
-		fmt.Printf("basepath ->> %s", basePath)
-		httpMux.Handle(basePath, frontendHandler)
-	}
 
 	// Add HTTP handler for query export downloads
 	observability.MuxHandle(httpMux, "/v1/download", observability.Middleware("runtime", s.logger, auth.HTTPMiddleware(s.aud, http.HandlerFunc(s.downloadHandler))))
