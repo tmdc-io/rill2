@@ -20,7 +20,6 @@ import (
 	"github.com/rilldata/rill/cli/pkg/cmdutil"
 	"github.com/rilldata/rill/cli/pkg/dotrill"
 	"github.com/rilldata/rill/cli/pkg/update"
-	"github.com/rilldata/rill/cli/pkg/web"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime"
 	"github.com/rilldata/rill/runtime/compilers/rillv1"
@@ -377,9 +376,9 @@ func (a *App) Serve(httpPort, grpcPort int, enableUI, openBrowser, readonly bool
 	group.Go(func() error {
 		return runtimeServer.ServeHTTP(ctx, func(mux *http.ServeMux) {
 			// Inject local-only endpoints on the server for the local UI and local backend endpoints
-			if enableUI {
-				mux.Handle("/", web.StaticHandler())
-			}
+			//if enableUI {
+			//	mux.Handle("/", web.StaticHandler())
+			//}
 			mux.Handle("/local/config", a.infoHandler(inf))
 			mux.Handle("/local/version", a.versionHandler())
 			mux.Handle("/local/track", a.trackingHandler())

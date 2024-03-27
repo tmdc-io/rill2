@@ -223,7 +223,7 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 		// API
 		httpMux.Handle(fmt.Sprintf("%s/", apiBasePath), _getRouter())
 		// WEB
-		httpMux.Handle(webBasePath, http.StripPrefix(webBasePath, web.StaticHandler()))
+		httpMux.Handle(webBasePath, http.StripPrefix(webBasePath, web.DynamicHandler()))
 	}
 
 	if registerAdditionalHandlers != nil {
