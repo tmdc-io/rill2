@@ -45,3 +45,7 @@ proto.generate:
 	cd proto && buf generate --template buf.gen.ui.yaml
 	npm run generate:runtime-client -w web-common
 	npm run generate:client -w web-admin
+
+.PHONY: docker-build
+docker-build:
+	docker build -t rubiklabs/rill:0.0.1 -f lens2.Dockerfile .
