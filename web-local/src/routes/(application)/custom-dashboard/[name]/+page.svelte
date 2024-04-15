@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer | {customDashboardName}</title>
+  <title>{customDashboardName}</title>
 </svelte:head>
 
 TODO

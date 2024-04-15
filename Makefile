@@ -1,11 +1,10 @@
 .PHONY: cli
 cli: cli.prepare
-	go build -o rill cli/main.go 
+	export BASE_PATH="dataos-basepath" && go build -o rill cli/main.go
 
 .PHONY: cli.prepare
-cli.prepare:
-	npm install
-	npm run build
+cli.prepare: env.prepare
+	export BASE_PATH="dataos-basepath" && npm install && npm run build
 	rm -rf cli/pkg/web/embed/dist || true
 	mkdir -p cli/pkg/web/embed/dist
 	cp -r web-local/build/* cli/pkg/web/embed/dist
@@ -13,6 +12,10 @@ cli.prepare:
 	mkdir -p runtime/pkg/examples/embed/dist
 	git clone --quiet https://github.com/rilldata/rill-examples.git runtime/pkg/examples/embed/dist
 	rm -rf runtime/pkg/examples/embed/dist/.git
+
+.PHONY: env.prepare
+env.prepare:
+
 
 .PHONY: coverage.go
 coverage.go:
@@ -42,3 +45,8 @@ proto.generate:
 	cd proto && buf generate --template buf.gen.ui.yaml
 	npm run generate:runtime-client -w web-common
 	npm run generate:client -w web-admin
+
+.PHONY: docker-build
+docker-build:
+	docker build -t rubiklabs/lens2-rill:0.42 -f lens2.Dockerfile .
+	docker push rubiklabs/lens2-rill:0.42

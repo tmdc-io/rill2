@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rilldata/rill/cli/pkg/web"
 	"io"
 	"net/http"
 	"os"
@@ -20,7 +21,6 @@ import (
 	"github.com/rilldata/rill/cli/pkg/cmdutil"
 	"github.com/rilldata/rill/cli/pkg/dotrill"
 	"github.com/rilldata/rill/cli/pkg/update"
-	"github.com/rilldata/rill/cli/pkg/web"
 	runtimev1 "github.com/rilldata/rill/proto/gen/rill/runtime/v1"
 	"github.com/rilldata/rill/runtime"
 	"github.com/rilldata/rill/runtime/compilers/rillv1"
@@ -439,7 +439,7 @@ func (a *App) pollServer(ctx context.Context, httpPort int, openOnHealthy, secur
 	}
 
 	// Health check succeeded
-	a.Logger.Infof("Serving Rill on: %s", uri)
+	a.Logger.Infof("Serving Rill on: %s/%s", uri, os.Getenv("BASE_PATH"))
 	if openOnHealthy {
 		err := browser.Open(uri)
 		if err != nil {

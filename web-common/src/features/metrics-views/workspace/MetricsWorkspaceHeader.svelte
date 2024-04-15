@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../../layout/navigation/navigation-utils";
   import { notifications } from "@rilldata/web-common/components/notifications";
   import { renameFileArtifact } from "@rilldata/web-common/features/entity-management/actions";
   import {

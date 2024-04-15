@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../../layout/navigation/navigation-utils";
   import { Button } from "@rilldata/web-common/components/button";
   import { getFilePathFromNameAndType } from "@rilldata/web-common/features/entity-management/entity-mappers";
   import { EntityType } from "@rilldata/web-common/features/entity-management/types";

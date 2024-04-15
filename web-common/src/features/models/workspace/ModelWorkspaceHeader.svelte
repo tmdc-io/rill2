@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../../layout/navigation/navigation-utils";
   import { IconButton } from "@rilldata/web-common/components/button";
   import HideBottomPane from "@rilldata/web-common/components/icons/HideBottomPane.svelte";
   import { notifications } from "@rilldata/web-common/components/notifications";

@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rilldata/rill/cli/pkg/web"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -200,6 +202,30 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 	// Call callback to register additional paths
 	// NOTE: This is so ugly, but not worth refactoring it properly right now.
 	httpMux := http.NewServeMux()
+
+	basePath := os.Getenv("BASE_PATH")
+	if len(basePath) > 0 {
+		// Trimmed basePath
+		basePath = strings.TrimPrefix(strings.TrimSuffix(basePath, "/"), "/")
+		apiBasePath := fmt.Sprintf("/%s/api", basePath)
+		webBasePath := fmt.Sprintf("/%s/", basePath)
+
+		_getRouter := func() http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasPrefix(r.URL.Path, apiBasePath) {
+					// Rewrite the path to /v1;
+					r.URL.Path = strings.TrimPrefix(r.URL.Path, apiBasePath)
+					// Serve the request using the main mux
+					httpMux.ServeHTTP(w, r)
+				}
+			}
+		}
+		// API
+		httpMux.Handle(fmt.Sprintf("%s/", apiBasePath), _getRouter())
+		// WEB
+		httpMux.Handle(webBasePath, http.StripPrefix(webBasePath, web.DynamicHandler(basePath)))
+	}
+
 	if registerAdditionalHandlers != nil {
 		registerAdditionalHandlers(httpMux)
 	}

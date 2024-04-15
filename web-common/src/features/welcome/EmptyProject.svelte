@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../layout/navigation/navigation-utils";
   import AddCircleOutline from "@rilldata/web-common/components/icons/AddCircleOutline.svelte";
   import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
   import Card from "../../components/card/Card.svelte";

@@ -102,12 +102,12 @@
         </div>
       {/each}
     {/if}
-    <AddAssetButton
-      id="add-table"
-      label="Add source"
-      bold={hasNoAssets}
-      on:click={openShowAddSourceModal}
-    />
+<!--    <AddAssetButton-->
+<!--      id="add-table"-->
+<!--      label="Add source"-->
+<!--      bold={hasNoAssets}-->
+<!--      on:click={openShowAddSourceModal}-->
+<!--    />-->
   </div>
 {/if}
 

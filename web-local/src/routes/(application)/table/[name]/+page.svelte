@@ -20,7 +20,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer | {fullyQualifiedTableName}</title>
+  <title>{fullyQualifiedTableName}</title>
 </svelte:head>
 
 <WorkspaceContainer inspector={false}>

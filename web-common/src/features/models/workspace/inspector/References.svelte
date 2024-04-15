@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { base } from '$app/paths';
   import Shortcut from "@rilldata/web-common/components/tooltip/Shortcut.svelte";
   import TooltipShortcutContainer from "@rilldata/web-common/components/tooltip/TooltipShortcutContainer.svelte";
   import { getFilePathFromNameAndType } from "@rilldata/web-common/features/entity-management/entity-mappers";
@@ -102,9 +103,7 @@
           <div>
             <WithModelResultTooltip {modelHasError}>
               <a
-                href="/{reference?.resource?.source
-                  ? 'source'
-                  : 'model'}/{reference?.resource?.meta?.name?.name}"
+                href={`${base}/${reference?.resource?.source ? 'source' : 'model'}/${reference?.resource?.meta?.name?.name}`}
                 class="ui-copy-muted grid justify-between gap-x-2 {query_reference_trigger} pl-4 pr-4"
                 style:grid-template-columns="auto max-content"
                 on:focus={focus(reference.reference)}

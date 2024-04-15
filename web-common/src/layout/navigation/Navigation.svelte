@@ -18,7 +18,7 @@
   import { runtime } from "../../runtime-client/runtime-store";
   import { DEFAULT_NAV_WIDTH } from "../config";
   import { drag } from "../drag";
-  import Footer from "./Footer.svelte";
+  // import Footer from "./Footer.svelte";
   import SurfaceControlButton from "./SurfaceControlButton.svelte";
   import { portal } from "@rilldata/web-common/lib/actions/portal";
 
@@ -114,7 +114,7 @@
     <div class="w-full flex flex-col h-full">
       <div class="grow">
         <ProjectTitle />
-        {#if isModelerEnabled}
+        <!--{#if isModelerEnabled}-->
           <TableAssets />
           {#if olapConnector === "duckdb"}
             <SourceAssets />
@@ -122,17 +122,17 @@
           {#if $isModelingSupportedForCurrentOlapDriver.data}
             <ModelAssets />
           {/if}
-        {/if}
+        <!--{/if}-->
         <DashboardAssets />
         {#if $customDashboards}
           <ChartAssets />
           <CustomDashboardAssets />
         {/if}
-        {#if isModelerEnabled}
-          <OtherFiles />
-        {/if}
+        <!--{#if isModelerEnabled}-->
+        <!--  <OtherFiles />-->
+        <!--{/if}-->
       </div>
-      <Footer />
+<!--      <Footer />-->
     </div>
   </div>
 </div>

@@ -68,7 +68,7 @@
 >
   <div
     id="header"
-    class="border-b w-full flex flex-col bg-slate-50"
+    class="border-b w-full flex flex-col bg-inherit"
     style:padding-left={leftSide}
   >
     {#if isRillDeveloper}

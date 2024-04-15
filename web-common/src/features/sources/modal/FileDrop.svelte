@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../../layout/navigation/navigation-utils";
   import Overlay from "@rilldata/web-common/components/overlay/Overlay.svelte";
   import { getFilePathFromNameAndType } from "@rilldata/web-common/features/entity-management/entity-mappers";
   import { EntityType } from "@rilldata/web-common/features/entity-management/types";
@@ -88,9 +88,9 @@
     <div
       class="grid place-content-center grid-gap-2 text-white m-auto p-6 break-all text-3xl"
     >
-      <span class="place-content-center">
-        drop your files to add new source
-      </span>
+<!--      <span class="place-content-center">-->
+<!--        drop your files to add new source-->
+<!--      </span>-->
     </div>
   </div>
 </Overlay>

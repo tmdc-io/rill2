@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../layout/navigation/navigation-utils";
   import Input from "@rilldata/web-common/components/forms/Input.svelte";
   import SubmissionError from "@rilldata/web-common/components/forms/SubmissionError.svelte";
   import { Dialog } from "@rilldata/web-common/components/modal/index";

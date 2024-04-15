@@ -1,4 +1,4 @@
-import { goto } from "$app/navigation";
+import { goto } from "../../layout/navigation/navigation-utils";
 import { EntityType } from "@rilldata/web-common/features/entity-management/types";
 import { runtimeServicePutFile } from "@rilldata/web-common/runtime-client";
 import { getFileAPIPathFromNameAndType } from "../entity-management/entity-mappers";

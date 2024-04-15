@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-  <title>Rill Developer | {modelName}</title>
+  <title>{modelName}</title>
 </svelte:head>
 
 {#if $fileQuery.data}

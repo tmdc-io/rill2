@@ -6,6 +6,8 @@ import {
   MetricsEventScreenName,
   MetricsEventSpace,
 } from "@rilldata/web-common/metrics/service/MetricsTypes";
+import { goto as gotoNavigate } from "$app/navigation";
+import { base } from '$app/paths';
 
 export function getNavURLToScreenMap(href: string) {
   if (href.includes("/source/")) return MetricsEventScreenName.Source;
@@ -23,4 +25,13 @@ export function emitNavigationTelemetry(href) {
     previousActiveEntity,
     screenName,
   );
+}
+
+// The 'goto' function is used to navigate to a specified
+// destination within the application. It takes in two parameters:
+// - destination: A string representing the path to navigate to.
+// - opt?: object: An optional object that can contain additional navigation options.
+export function goto(destination: string, opt?: object ) {
+  const url = `${base}${destination}`;
+  void gotoNavigate(url, opt);
 }

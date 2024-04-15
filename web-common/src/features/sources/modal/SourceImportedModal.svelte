@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
+  import { goto } from "../../../layout/navigation/navigation-utils";
   import Button from "@rilldata/web-common/components/button/Button.svelte";
   import Dialog from "@rilldata/web-common/components/dialog/Dialog.svelte";
   import CheckCircleNew from "@rilldata/web-common/components/icons/CheckCircleNew.svelte";
