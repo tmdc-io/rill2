@@ -48,4 +48,5 @@ proto.generate:
 
 .PHONY: docker-build
 docker-build:
-	docker build -t rubiklabs/rill:0.0.1 -f lens2.Dockerfile .
+	docker build -t rubiklabs/lens2-rill:0.42 -f lens2.Dockerfile .
+	docker push rubiklabs/lens2-rill:0.42

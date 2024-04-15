@@ -33,6 +33,8 @@ RUN groupadd -g 1000 rill \
 
 RUN rill runtime install-duckdb-extensions
 
+WORKDIR /etc/dataos/work
+
 # Start the application
 ENTRYPOINT ["rill"]
 CMD ["start"]
