@@ -31,9 +31,9 @@ export async function fetchWrapper({
   if (signal && signal.aborted) return Promise.reject(new Error("Aborted"));
 
   headers ??= { "Content-Type": "application/json" };
-  const TOKEN = fetchTokenFromLocalStorage();
-  if(TOKEN) {
-    headers["Authorization"] = `Bearer ${TOKEN}`;
+  const token = fetchTokenFromLocalStorage();
+  if(token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
   url = encodeURI(url);
 

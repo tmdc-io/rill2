@@ -119,11 +119,11 @@ export class WatchRequestClient<Res extends WatchResponse> {
   private getFetchStream(url: string, controller: AbortController) {
     const headers = { "Content-Type": "application/json" };
     const jwt = get(runtime).jwt;
-    const TOKEN = fetchTokenFromLocalStorage();
+    const token = fetchTokenFromLocalStorage();
     if (jwt) {
       headers["Authorization"] = `Bearer ${jwt.token}`;
-    } else if(TOKEN) {
-      headers["Authorization"] = `Bearer ${TOKEN}`;
+    } else if(token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     return streamingFetchWrapper<StreamingFetchResponse<Res>>(
