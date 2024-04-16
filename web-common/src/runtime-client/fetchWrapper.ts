@@ -1,3 +1,5 @@
+import { fetchTokenFromLocalStorage } from "@rilldata/web-common/runtime-client/utils";
+
 export type FetchWrapperOptions = {
   baseUrl?: string;
   url: string;
@@ -29,9 +31,7 @@ export async function fetchWrapper({
   if (signal && signal.aborted) return Promise.reject(new Error("Aborted"));
 
   headers ??= { "Content-Type": "application/json" };
-  const storeValue = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")) : {};
-  const TOKEN = storeValue?.accessToken;
-  console.log('$$$$$$$$$$$$$$$ fetchWrapper TOKEN', TOKEN);
+  const TOKEN = fetchTokenFromLocalStorage();
   if(TOKEN) {
     headers["Authorization"] = `Bearer ${TOKEN}`;
   }

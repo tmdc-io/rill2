@@ -10,6 +10,7 @@ import type {
 import type { Runtime } from "@rilldata/web-common/runtime-client/runtime-store";
 import { runtime } from "@rilldata/web-common/runtime-client/runtime-store";
 import { Unsubscriber, derived, get } from "svelte/store";
+import { fetchTokenFromLocalStorage } from "@rilldata/web-common/runtime-client/utils";
 
 type WatchResponse =
   | V1WatchFilesResponse
@@ -118,8 +119,11 @@ export class WatchRequestClient<Res extends WatchResponse> {
   private getFetchStream(url: string, controller: AbortController) {
     const headers = { "Content-Type": "application/json" };
     const jwt = get(runtime).jwt;
+    const TOKEN = fetchTokenFromLocalStorage();
     if (jwt) {
       headers["Authorization"] = `Bearer ${jwt.token}`;
+    } else if(TOKEN) {
+      headers["Authorization"] = `Bearer ${TOKEN}`;
     }
 
     return streamingFetchWrapper<StreamingFetchResponse<Res>>(
