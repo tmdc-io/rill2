@@ -19,15 +19,7 @@ export class RillIntakeClient implements TelemetryClient {
 
   public async fireEvent(event: MetricsEvent) {
     try {
-      const resp = await fetch(`${RILL_RUNTIME_URL}/local/track`, {
-        method: "POST",
-        body: JSON.stringify(event),
-        headers: {
-          Authorization: this.authHeader,
-        },
-      });
-      if (!resp.ok)
-        console.error(`Failed to send ${event.event_type}. ${resp.statusText}`);
+        return; //Ingoring Metrics Events
     } catch (err) {
       console.error(`Failed to send ${event.event_type}. ${err.message}`);
     }
