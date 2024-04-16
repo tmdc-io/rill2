@@ -213,6 +213,18 @@ func (s *Server) HTTPHandler(ctx context.Context, registerAdditionalHandlers fun
 		_getRouter := func() http.HandlerFunc {
 			return func(w http.ResponseWriter, r *http.Request) {
 				if strings.HasPrefix(r.URL.Path, apiBasePath) {
+					// Authenticate DataOS user
+					bearerToken := r.Header.Get("Authorization")
+					if bearerToken == "" {
+						http.Error(w, "Unauthorized", http.StatusUnauthorized)
+						return
+					}
+					err := auth.HeimdallAuthorization(bearerToken)
+					if err != nil {
+						s.logger.Error(err.Error())
+						http.Error(w, "Authentication Failed", http.StatusUnauthorized)
+						return
+					}
 					// Rewrite the path to /v1;
 					r.URL.Path = strings.TrimPrefix(r.URL.Path, apiBasePath)
 					// Serve the request using the main mux
