@@ -18,11 +18,20 @@
   import AddSourceModal from "../features/sources/modal/AddSourceModal.svelte";
   import { duplicateSourceName } from "@rilldata/web-common/features/sources/sources-store";
   import { addSourceModal } from "../features/sources/modal/add-source-visibility";
+  import { fetchTokenFromLocalStorage } from "@rilldata/web-common/runtime-client/utils";
+  import Logout from "../layout/navigation/Logout.svelte";
+  import { isLoggedOut } from "@rilldata/web-common/runtime-client/fetchWrapper";
 
   const appBuildMetaStore: Writable<ApplicationBuildMetadata> =
     getContext("rill:app:metadata");
-
+  let isUserLoggedOut;
+  isLoggedOut.subscribe((value) => (isUserLoggedOut = value));
   onMount(async () => {
+    const token = fetchTokenFromLocalStorage();
+    if(!token) {
+      isLoggedOut.set(true);
+      return;
+    }
     const config = await runtimeServiceGetConfig();
     await initMetrics(config);
 
@@ -47,6 +56,9 @@
   }
 </script>
 
+{#if isUserLoggedOut}
+<Logout />
+{:else}
 <div class="body">
   {#if $importOverlayVisible}
     <PreparingImport />
@@ -93,7 +105,7 @@
     </WelcomePageRedirect>
   </div>
 </div>
-
+{/if}
 <NotificationCenter />
 
 <style>
