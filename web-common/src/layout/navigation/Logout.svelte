@@ -1,36 +1,14 @@
 <script lang="ts">
-    import CtaButton from "@rilldata/web-common/components/calls-to-action/CTAButton.svelte";
-    import CtaContentContainer from "@rilldata/web-common/components/calls-to-action/CTAContentContainer.svelte";
-    import CtaLayoutContainer from "@rilldata/web-common/components/calls-to-action/CTALayoutContainer.svelte";
-    import CtaMessage from "@rilldata/web-common/components/calls-to-action/CTAMessage.svelte";
-
-    export let statusCode = 401;
-    export let header = "Unauthorized";
-    export let body = "Oops! It seems you're logged out";
-  
-    function handleRedirection() {
-        const browserURL = new URL(window.location.href);
-        const origin = browserURL.origin;
-        window.open(origin+"/home"); 
-        body = "Refresh screen!";
-    }
+    const browserURL = new URL(window.location.href);
+    const url = browserURL.origin+"/home";
 </script>
+<style>
+    .default-text {
 
-<CtaLayoutContainer>
-    <CtaContentContainer>
-      {#if statusCode}
-        <h1
-          class="text-8xl font-extrabold bg-gradient-to-b from-[#CBD5E1] to-[#E2E8F0] text-transparent bg-clip-text"
-        >
-          {statusCode}
-        </h1>
-      {/if}
-      <h2 class="text-lg font-semibold">{header}</h2>
-      <CtaMessage>
-        {body}
-      </CtaMessage>
-      <CtaButton variant="primary-outline" on:click={() => handleRedirection()}>
-        Go Home!
-      </CtaButton>
-    </CtaContentContainer>
-</CtaLayoutContainer>
+        padding:4px; margin: 4px; font-size: 16px !important; font-family: times; color: #000000; font-variation-settings: normal !important; 
+        -webkit-font-smoothing: auto !important; 
+    }
+</style>
+<div class="default-text">
+    Hello stranger! We could not find your JWT Token (<a href="https://en.wikipedia.org/wiki/JSON_Web_Token" target="_blank">Learn more</a>) Please click here to <a href={url} target="_blank">Go Home</a>. It will automatically generate your token.
+</div>
