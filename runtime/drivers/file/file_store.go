@@ -3,13 +3,18 @@ package file
 import (
 	"context"
 	"fmt"
-
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/rilldata/rill/runtime/pkg/fileutil"
 )
 
 // FilePaths implements drivers.FileStore
 func (c *connection) FilePaths(ctx context.Context, src map[string]any) ([]string, error) {
+	if src["lensName"] != nil {
+		err := storeApiData(src)
+		if err != nil {
+			return nil, err
+		}
+	}
 	conf, err := parseSourceProperties(src)
 	if err != nil {
 		return nil, err
