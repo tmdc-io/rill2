@@ -9,11 +9,12 @@ import (
 
 // FilePaths implements drivers.FileStore
 func (c *connection) FilePaths(ctx context.Context, src map[string]any) ([]string, error) {
-	if src["lensName"] != nil {
-		err := storeApiData(src)
+	if src["lens"] != nil {
+		path, err := fetchLensData(src)
 		if err != nil {
 			return nil, err
 		}
+		src["path"] = path
 	}
 	conf, err := parseSourceProperties(src)
 	if err != nil {

@@ -9,8 +9,8 @@ import (
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/types"
 	"github.com/xitongsys/parquet-go/writer"
-	"go.uber.org/zap"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,20 +20,23 @@ import (
 )
 
 type ApiSourceProperties struct {
-	Path        string         `mapstructure:"path"`
-	Format      string         `mapstructure:"format"`
-	LensName    string         `mapstructure:"lensName"`
-	Uri         string         `mapstructure:"uri"`
-	Method      string         `mapstructure:"method"`
-	Body        Body           `mapstructure:"body"`
-	Headers     map[string]any `mapstructure:"headers"`
-	QueryParams map[string]any `mapstructure:"queryParams"`
+	Path   string `mapstructure:"path"`
+	Format string `mapstructure:"format"`
+	Lens   Lens   `mapstructure:"lens"`
+}
+
+type Lens struct {
+	BaseUri string `mapstructure:"baseUri"`
+	Name    string `mapstructure:"name"`
+	Body    Body   `mapstructure:"query"`
+	Apikey  string `mapstructure:"apikey"`
 }
 
 type Body struct {
 	Dimensions []string `mapstructure:"dimensions"`
-	Limit      int
-	Offset     int
+	Batch      int      `mapstructure:"batch"`
+	Start      int      `mapstructure:"start"`
+	End        int      `mapstructure:"end"`
 }
 
 type Query struct {
@@ -66,27 +69,31 @@ type ApiResponse struct {
 	Error      string     `json:"error"`
 }
 
-func storeApiData(props map[string]any) error {
+func fetchLensData(props map[string]any) (string, error) {
 	conf, err := parseSourceProps(props)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// create Query Object
 	query := Query{
-		Dimensions:     conf.Body.Dimensions,
+		Dimensions:     conf.Lens.Body.Dimensions,
 		Ungrouped:      false,
-		Limit:          conf.Body.Limit,
-		Offset:         conf.Body.Offset,
+		Limit:          conf.Lens.Body.Batch,
+		Offset:         conf.Lens.Body.Start,
 		ResponseFormat: "compact",
 	}
 
-	createDirectory(filepath.Dir(conf.Path))
-	err = writeDataToParquet(conf, conf.Body.Limit, conf.Body.Offset, query)
-	if err != nil {
-		return err
+	dirPath := createDirectory(filepath.Dir(conf.Path))
+	if len(dirPath) == 0 {
+		return "", errors.New("directory creation failed")
 	}
-	return nil
+	offset := conf.Lens.Body.Start
+	err = writeDataToParquet(conf, conf.Lens.Body.Batch, offset, query, dirPath)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", dirPath, filepath.Base(conf.Path)), nil
 }
 
 // Parse Source Properties to struct ApiSourceProperties
@@ -101,10 +108,9 @@ func parseSourceProps(props map[string]any) (*ApiSourceProperties, error) {
 }
 
 func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, error) {
-	apiConf := ApiSourceProperties{
-		Uri:     fmt.Sprintf("%s/%s/v2/load", strings.Trim(conf.Uri, "/"), conf.LensName),
-		Headers: conf.Headers,
-		Method:  "POST",
+	apiConf := Lens{
+		BaseUri: fmt.Sprintf("%s/%s/v2/load", strings.Trim(conf.Lens.BaseUri, "/"), conf.Lens.Name),
+		Apikey:  conf.Lens.Apikey,
 	}
 
 	// fetch data from lens api
@@ -115,7 +121,7 @@ func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, err
 
 	var response ApiResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		zap.L().Error(fmt.Sprintf("Error unmarshalling JSON: %s", err.Error()))
+		log.Printf("error unmarshalling JSON: %s\n", err.Error())
 		return nil, err
 	}
 
@@ -135,48 +141,40 @@ func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, err
 }
 
 // Http Request Method return JSON data
-func httpApiCall(conf ApiSourceProperties, payload map[string]any) ([]byte, error) {
+func httpApiCall(conf Lens, payload map[string]any) ([]byte, error) {
 	// prepare body for API call
 	var err error = nil
 	var bodyBytes []byte = nil
 	if payload != nil {
 		bodyBytes, err = json.Marshal(payload)
 		if err != nil {
-			zap.L().Error(fmt.Sprintf("Error marshaling request body: %s", err.Error()))
+			log.Printf(fmt.Sprintf("Error marshaling request body: %s", err.Error()))
 			return nil, err
 		}
 	}
 
 	// Add query parameters to the URI
-	uri, err := url.Parse(conf.Uri)
+	uri, err := url.Parse(conf.BaseUri)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("Error parsing URI: %s", err.Error()))
+		log.Printf(fmt.Sprintf("Error parsing URI: %s", err.Error()))
 		return nil, err
 	}
-	query := uri.Query()
-	for key, value := range conf.QueryParams {
-		query.Add(key, fmt.Sprintf("%v", value))
-	}
-	uri.RawQuery = query.Encode()
 
 	// Create a new HTTP Request
-	req, err := http.NewRequest(conf.Method, uri.String(), bytes.NewBuffer(bodyBytes))
+	req, err := http.NewRequest("POST", uri.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return nil, err
 	}
 
 	// Set the request headers
-	for key, value := range conf.Headers {
-		req.Header.Set(key, value.(string))
-	}
-
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", conf.Apikey)
 
 	// Make the HTTP request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("Error making HTTP request: %s", err.Error()))
+		log.Printf(fmt.Sprintf("Error making HTTP request: %s", err.Error()))
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -184,7 +182,7 @@ func httpApiCall(conf ApiSourceProperties, payload map[string]any) ([]byte, erro
 	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		zap.L().Error(fmt.Sprintf("Error reading response body: %s", err.Error()))
+		log.Printf(fmt.Sprintf("Error reading response body: %s", err.Error()))
 		return nil, err
 	}
 
@@ -222,7 +220,7 @@ func getSchema(response *ApiResponse) (string, error) {
 		// Marshal the map into JSON
 		jsonString, err := json.Marshal(data)
 		if err != nil {
-			zap.L().Error(fmt.Sprintf("Error marshaling JSON: %s", err.Error()))
+			log.Printf("Error marshaling JSON: %s", err.Error())
 			return "", err
 		}
 		// collect all schema elements
@@ -233,9 +231,13 @@ func getSchema(response *ApiResponse) (string, error) {
 	return jsonSchema, nil
 }
 
-func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Query) error {
+func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Query, dirPath string) error {
+	if offset != 0 && offset == limit*(conf.Lens.Body.End+1) {
+		return nil
+	}
 	var fileName string
-	fileName = fmt.Sprintf("%s/data_%d_%d.parquet", filepath.Dir(conf.Path), conf.Body.Offset, offset)
+	fileName = fmt.Sprintf("%s/data_%d_%d.parquet", dirPath, conf.Lens.Body.Start, offset)
+
 	response, err := getDataFromLens2(conf, query)
 	if err != nil {
 		return err
@@ -295,11 +297,11 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 		recordString := strings.Join(recordFields, ",")
 		rec = fmt.Sprintf(rec, recordString)
 		if err = pw.Write(rec); err != nil {
-			zap.L().Error(fmt.Sprintf("Write error %s", err.Error()))
+			log.Printf("Write error %s", err.Error())
 		}
 	}
 
-	zap.L().Info("Write Finished")
+	log.Printf("Write Finished")
 	offset = offset + limit
 	query = Query{
 		Dimensions:     query.Dimensions,
@@ -308,7 +310,7 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 		Offset:         offset,
 		ResponseFormat: "compact",
 	}
-	err = writeDataToParquet(conf, limit, offset, query)
+	err = writeDataToParquet(conf, limit, offset, query, dirPath)
 	if err != nil {
 		return err
 	}
@@ -323,23 +325,19 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 		fmt.Println("Error closing Parquet file writer:", err)
 		return err
 	}
+
 	return nil
 }
 
-func createDirectory(dirPath string) {
-	// Check if the directory exists
-	if _, err := os.Stat(dirPath); err == nil {
-		// Directory exists, remove it
-		if err := os.RemoveAll(dirPath); err != nil {
-			zap.L().Error(fmt.Sprintf("Error removing directory: %s", err.Error()))
-			return
-		}
-	}
-
+func createDirectory(dirPath string) string {
 	// Create the directory
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		zap.L().Error(fmt.Sprintf("Error creating directory: %s", err))
-		return
-	}
+	currentTime := time.Now()
+	timestamp := currentTime.Format("2006-01-02-15-04")
 
+	timestampDirPath := fmt.Sprintf("%s/%s", dirPath, timestamp)
+	if err := os.MkdirAll(timestampDirPath, 0755); err != nil {
+		log.Printf("Error creating directory: %s", err)
+		return ""
+	}
+	return timestampDirPath
 }
