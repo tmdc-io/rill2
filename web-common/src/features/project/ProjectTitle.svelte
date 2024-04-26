@@ -24,7 +24,7 @@
     class="grid grid-flow-col justify-start gap-x-3 p-4 pl-[.75rem] items-center content-center"
   >
     {#if mounted && $projectTitle.isSuccess}
-      <a href="/">
+      <a href="/dataos-basepath/">
         <div
           style:width="20px"
           style:font-size="9px"
@@ -42,13 +42,13 @@
     <Tooltip distance={8}>
       <a
         class="font-semibold text-black grow text-ellipsis overflow-hidden whitespace-nowrap pr-12"
-        href="/"
+        href="/dataos-basepath/"
       >
-        {$projectTitle.data || "Untitled Rill Project"}
+        {$projectTitle.data || "Untitled Project"}
       </a>
       <TooltipContent maxWidth="300px" slot="tooltip-content">
         <div class="font-bold">
-          {$projectTitle.data || "Untitled Rill Project"}
+          {$projectTitle.data || "Untitled Project"}
         </div>
       </TooltipContent>
     </Tooltip>
