@@ -1,3 +1,8 @@
+import { fetchTokenFromLocalStorage } from "@rilldata/web-common/runtime-client/utils";
+import { writable } from 'svelte/store';
+
+export const isLoggedOut = writable(false);
+
 export type FetchWrapperOptions = {
   baseUrl?: string;
   url: string;
@@ -29,7 +34,10 @@ export async function fetchWrapper({
   if (signal && signal.aborted) return Promise.reject(new Error("Aborted"));
 
   headers ??= { "Content-Type": "application/json" };
-
+  const token = fetchTokenFromLocalStorage();
+  if(token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   url = encodeURI(url);
 
   if (params) {
@@ -48,6 +56,10 @@ export async function fetchWrapper({
     headers,
     signal,
   });
+  if(resp.status === 401) {
+    isLoggedOut.set(true);
+    return;
+  }
   if (!resp.ok) {
     const data = await resp.json();
 

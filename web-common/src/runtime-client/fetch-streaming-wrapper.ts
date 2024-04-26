@@ -2,6 +2,7 @@
  * Wrapper around native fetch method for streaming requests.
  * Pass in {@link AbortSignal} to control cancellation.
  */
+import { isLoggedOut } from "@rilldata/web-common/runtime-client/fetchWrapper";
 export async function* streamingFetchWrapper<T>(
   url: string,
   method: string,
@@ -15,6 +16,10 @@ export async function* streamingFetchWrapper<T>(
     headers,
     signal,
   });
+  if(response.status === 401) {
+    isLoggedOut.set(true);
+    return;
+  }
   if (!response.body) {
     throw new Error("No response");
   }
