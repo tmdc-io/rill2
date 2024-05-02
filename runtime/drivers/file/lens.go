@@ -64,9 +64,9 @@ type Dimension struct {
 }
 
 type ApiResponse struct {
-	Data       Data       `json:"data"`
-	Annotation Annotation `json:"annotation"`
-	Error      string     `json:"error"`
+	Data       Data        `json:"data"`
+	Annotation Annotation  `json:"annotation"`
+	Error      interface{} `json:"error"`
 }
 
 func fetchLensData(props map[string]any) (string, error) {
@@ -78,7 +78,7 @@ func fetchLensData(props map[string]any) (string, error) {
 	// create Query Object
 	query := Query{
 		Dimensions:     conf.Lens.Body.Dimensions,
-		Ungrouped:      false,
+		Ungrouped:      true,
 		Limit:          conf.Lens.Body.Batch,
 		Offset:         conf.Lens.Body.Start,
 		ResponseFormat: "compact",
@@ -110,7 +110,7 @@ func parseSourceProps(props map[string]any) (*ApiSourceProperties, error) {
 func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, error) {
 	apiConf := Lens{
 		BaseUri: fmt.Sprintf("%s/%s/v2/load", strings.Trim(conf.Lens.BaseUri, "/"), conf.Lens.Name),
-		Apikey:  conf.Lens.Apikey,
+		Apikey:  fmt.Sprintf("Bearer %s", conf.Lens.Apikey),
 	}
 
 	// fetch data from lens api
@@ -121,19 +121,31 @@ func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, err
 
 	var response ApiResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		log.Printf("error unmarshalling JSON: %s\n", err.Error())
+		log.Println(err.Error(), response.Error)
+		//log.Printf("error unmarshalling JSON: %s\n", err.Error())
 		return nil, err
 	}
 
-	if len(response.Error) > 0 {
-		if response.Error == "Continue wait" {
-			data, err := getDataFromLens2(conf, query)
-			if err != nil {
-				return nil, err
+	if response.Error != nil {
+		switch response.Error.(type) {
+		case string:
+			if response.Error.(string) == "Continue wait" {
+				data, err := getDataFromLens2(conf, query)
+				if err != nil {
+					return nil, err
+				}
+				return data, nil
+			} else {
+				return nil, errors.New(response.Error.(string))
 			}
-			return data, nil
-		} else {
-			return nil, errors.New(response.Error)
+		case map[string]interface{}:
+			if response.Error.(map[string]interface{}) != nil {
+				return nil, errors.New(fmt.Sprintf("%v", response.Error))
+			} else {
+				return nil, errors.New("no response error fetched")
+			}
+		default:
+			return nil, errors.New(fmt.Sprintf("Invalid error response: %v", response.Error))
 		}
 	}
 
@@ -207,11 +219,11 @@ func getSchema(response *ApiResponse) (string, error) {
 		pair := ""
 		switch dtype := getParquetDatatype(response.Annotation.Dimensions[member].Type); dtype {
 		case "BYTE_ARRAY":
-			pair = fmt.Sprintf("name=%s, type=%s, convertedtype=UTF8", member, dtype)
+			pair = fmt.Sprintf("name=%s, type=%s, convertedtype=UTF8", strings.Split(member, ".")[1], dtype)
 		case "TIMESTAMP_MICROS":
-			pair = fmt.Sprintf("name=%s, type=INT64, convertedtype=%s", member, dtype)
+			pair = fmt.Sprintf("name=%s, type=INT64, convertedtype=%s", strings.Split(member, ".")[1], dtype)
 		default:
-			pair = fmt.Sprintf("name=%s, type=%s", member, dtype)
+			pair = fmt.Sprintf("name=%s, type=%s", strings.Split(member, ".")[1], dtype)
 		}
 
 		data := map[string]interface{}{
@@ -273,7 +285,7 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 			recordField := ""
 			switch valueType := getParquetDatatype(response.Annotation.Dimensions[field].Type); valueType {
 			case "BYTE_ARRAY":
-				recordField = fmt.Sprintf("\"%s\":\"%s\"", field, memberValue.(string))
+				recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], memberValue.(string))
 			case "TIMESTAMP_MICROS":
 				// Parse the string as a time.Time object
 				layout := "2006-01-02T15:04:05.000"
@@ -283,13 +295,13 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 				}
 				// Convert the time to a Unix timestamp (int64)
 				timestampMicros := types.TimeToTIMESTAMP_MICROS(timestamp, false)
-				recordField = fmt.Sprintf("\"%s\":\"%d\"", field, timestampMicros)
+				recordField = fmt.Sprintf("\"%s\":\"%d\"", strings.Split(field, ".")[1], timestampMicros)
 			case "BOOLEAN":
-				recordField = fmt.Sprintf("\"%s\":\"%t\"", field, memberValue.(bool))
+				recordField = fmt.Sprintf("\"%s\":\"%t\"", strings.Split(field, ".")[1], memberValue.(bool))
 			case "FLOAT":
-				recordField = fmt.Sprintf("\"%s\":\"%f\"", field, memberValue.(float64))
+				recordField = fmt.Sprintf("\"%s\":\"%f\"", strings.Split(field, ".")[1], memberValue.(float64))
 			default:
-				recordField = fmt.Sprintf("\"%s\":\"%s\"", field, fmt.Sprintf("%s", memberValue))
+				recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], fmt.Sprintf("%s", memberValue))
 			}
 			//fmt.Println(recordField)
 			recordFields = append(recordFields, recordField)
