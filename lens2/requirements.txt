@@ -1,0 +1,3 @@
+requests==2.31.0
+PyYAML==6.0.1
+sql-metadata==2.10.0

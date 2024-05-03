@@ -19,7 +19,7 @@ COPY . .
 RUN make cli
 
 # Use a base ubuntu for the final image
-FROM ubuntu
+FROM python:3.9-slim
 
 RUN apt-get update && apt-get install -y ca-certificates
 
@@ -34,7 +34,9 @@ RUN groupadd -g 1001 rill \
 RUN rill runtime install-duckdb-extensions
 
 WORKDIR /etc/dataos/work
+COPY lens2 /lens2
+RUN python3 -m pip install -r /lens2/requirements.txt
 
 # Start the application
-ENTRYPOINT ["rill"]
-CMD ["start"]
+# ENTRYPOINT ["rill"]
+# CMD ["start"]
