@@ -232,11 +232,11 @@ func getSchema(response *ApiResponse) (string, error) {
 		pair := ""
 		switch dtype := getParquetDatatype(response.Annotation.Dimensions[member].Type); dtype {
 		case "BYTE_ARRAY":
-			pair = fmt.Sprintf("name=%s, type=%s, convertedtype=UTF8", strings.Split(member, ".")[1], dtype)
+			pair = fmt.Sprintf("name=%s, type=%s, convertedtype=UTF8, repetitiontype=OPTIONAL", strings.Split(member, ".")[1], dtype)
 		case "TIMESTAMP_MICROS":
-			pair = fmt.Sprintf("name=%s, type=INT64, convertedtype=%s", strings.Split(member, ".")[1], dtype)
+			pair = fmt.Sprintf("name=%s, type=INT64, convertedtype=%s, repetitiontype=OPTIONAL", strings.Split(member, ".")[1], dtype)
 		default:
-			pair = fmt.Sprintf("name=%s, type=%s", strings.Split(member, ".")[1], dtype)
+			pair = fmt.Sprintf("name=%s, type=%s, repetitiontype=OPTIONAL", strings.Split(member, ".")[1], dtype)
 		}
 
 		data := map[string]interface{}{
@@ -293,41 +293,28 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 			for index, memberValue := range row {
 				field := response.Data.Members[index]
 				recordField := ""
-				switch valueType := getParquetDatatype(response.Annotation.Dimensions[field].Type); valueType {
-				case "BYTE_ARRAY":
-					value := ""
-					if memberValue != nil {
-						value = memberValue.(string)
+				if memberValue != nil {
+					switch valueType := getParquetDatatype(response.Annotation.Dimensions[field].Type); valueType {
+					case "BYTE_ARRAY":
+						recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], memberValue.(string))
+					case "TIMESTAMP_MICROS":
+						layout := "2006-01-02T15:04:05.000"
+						timestamp, err := time.Parse(layout, memberValue.(string))
+						if err != nil {
+							return false, err
+						}
+						// Convert the time to a Unix timestamp (int64)
+						timestampMicros := types.TimeToTIMESTAMP_MICROS(timestamp, false)
+						recordField = fmt.Sprintf("\"%s\":\"%d\"", strings.Split(field, ".")[1], timestampMicros)
+					case "BOOLEAN":
+						recordField = fmt.Sprintf("\"%s\":\"%t\"", strings.Split(field, ".")[1], memberValue.(bool))
+					case "FLOAT":
+						recordField = fmt.Sprintf("\"%s\":\"%f\"", strings.Split(field, ".")[1], memberValue.(float64))
+					default:
+						recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], fmt.Sprintf("%s", memberValue))
 					}
-					recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], value)
-				case "TIMESTAMP_MICROS":
-					value := "0001-01-01T00:00:00.000"
-					if memberValue != nil {
-						value = memberValue.(string)
-					}
-					// Parse the string as a time.Time object
-					layout := "2006-01-02T15:04:05.000"
-					timestamp, err := time.Parse(layout, value)
-					if err != nil {
-						return false, err
-					}
-					// Convert the time to a Unix timestamp (int64)
-					timestampMicros := types.TimeToTIMESTAMP_MICROS(timestamp, false)
-					recordField = fmt.Sprintf("\"%s\":\"%d\"", strings.Split(field, ".")[1], timestampMicros)
-				case "BOOLEAN":
-					value := false
-					if memberValue != nil {
-						value = memberValue.(bool)
-					}
-					recordField = fmt.Sprintf("\"%s\":\"%t\"", strings.Split(field, ".")[1], value)
-				case "FLOAT":
-					value := 0.0
-					if memberValue != nil {
-						value = memberValue.(float64)
-					}
-					recordField = fmt.Sprintf("\"%s\":\"%f\"", strings.Split(field, ".")[1], value)
-				default:
-					recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], fmt.Sprintf("%s", memberValue))
+				} else {
+					recordField = fmt.Sprintf("\"%s\":null", strings.Split(field, ".")[1])
 				}
 				recordFields = append(recordFields, recordField)
 			}
