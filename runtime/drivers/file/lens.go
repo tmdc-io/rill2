@@ -89,9 +89,22 @@ func fetchLensData(props map[string]any) (string, error) {
 		return "", errors.New("directory creation failed")
 	}
 	offset := conf.Lens.Body.Start
-	err = writeDataToParquet(conf, conf.Lens.Body.Batch, offset, query, dirPath)
-	if err != nil {
-		return "", err
+	for {
+		complete, err := writeDataToParquet(conf, conf.Lens.Body.Batch, offset, query, dirPath)
+		if err != nil {
+			return "", err
+		}
+		if complete {
+			break
+		}
+		offset = offset + conf.Lens.Body.Batch
+		query = Query{
+			Dimensions:     query.Dimensions,
+			Ungrouped:      query.Ungrouped,
+			Limit:          conf.Lens.Body.Batch,
+			Offset:         offset,
+			ResponseFormat: "compact",
+		}
 	}
 	return fmt.Sprintf("%s/%s", dirPath, filepath.Base(conf.Path)), nil
 }
@@ -243,102 +256,105 @@ func getSchema(response *ApiResponse) (string, error) {
 	return jsonSchema, nil
 }
 
-func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Query, dirPath string) error {
+func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Query, dirPath string) (bool, error) {
 	if offset != 0 && offset == limit*(conf.Lens.Body.End+1) {
-		return nil
+		return true, nil
 	}
 	var fileName string
 	fileName = fmt.Sprintf("%s/data_%d_%d.parquet", dirPath, conf.Lens.Body.Start, offset)
 
-	response, err := getDataFromLens2(conf, query)
+	count, response, err := writeIfDataExists(conf, query)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	if len(response.Data.Dataset) == 0 {
-		return nil
-	}
+	if count > 0 {
+		schema, err := getSchema(response)
+		if err != nil {
+			return false, err
+		}
 
-	schema, err := getSchema(response)
-	if err != nil {
-		return err
-	}
+		// write data to parquet file
+		fw, err := local.NewLocalFileWriter(fileName)
+		if err != nil {
+			return false, err
+		}
+		defer fw.Close()
+		pw, err := writer.NewJSONWriter(schema, fw, 4)
+		if err != nil {
+			return false, err
+		}
+		defer pw.WriteStop()
 
-	// write data to parquet file
-	fw, err := local.NewLocalFileWriter(fileName)
-	if err != nil {
-		return err
-	}
-	defer fw.Close()
-	pw, err := writer.NewJSONWriter(schema, fw, 4)
-	if err != nil {
-		return err
-	}
-	defer pw.WriteStop()
-
-	// Write data to the Parquet file
-	for _, row := range response.Data.Dataset {
-		rec := `{%s}`
-		var recordFields []string = nil
-		for index, memberValue := range row {
-			field := response.Data.Members[index]
-			recordField := ""
-			switch valueType := getParquetDatatype(response.Annotation.Dimensions[field].Type); valueType {
-			case "BYTE_ARRAY":
-				recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], memberValue.(string))
-			case "TIMESTAMP_MICROS":
-				// Parse the string as a time.Time object
-				layout := "2006-01-02T15:04:05.000"
-				timestamp, err := time.Parse(layout, memberValue.(string))
-				if err != nil {
-					return err
+		// Write data to the Parquet file
+		for _, row := range response.Data.Dataset {
+			rec := `{%s}`
+			var recordFields []string = nil
+			for index, memberValue := range row {
+				field := response.Data.Members[index]
+				recordField := ""
+				switch valueType := getParquetDatatype(response.Annotation.Dimensions[field].Type); valueType {
+				case "BYTE_ARRAY":
+					value := ""
+					if memberValue != nil {
+						value = memberValue.(string)
+					}
+					recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], value)
+				case "TIMESTAMP_MICROS":
+					value := "0001-01-01T00:00:00.000"
+					if memberValue != nil {
+						value = memberValue.(string)
+					}
+					// Parse the string as a time.Time object
+					layout := "2006-01-02T15:04:05.000"
+					timestamp, err := time.Parse(layout, value)
+					if err != nil {
+						return false, err
+					}
+					// Convert the time to a Unix timestamp (int64)
+					timestampMicros := types.TimeToTIMESTAMP_MICROS(timestamp, false)
+					recordField = fmt.Sprintf("\"%s\":\"%d\"", strings.Split(field, ".")[1], timestampMicros)
+				case "BOOLEAN":
+					value := false
+					if memberValue != nil {
+						value = memberValue.(bool)
+					}
+					recordField = fmt.Sprintf("\"%s\":\"%t\"", strings.Split(field, ".")[1], value)
+				case "FLOAT":
+					value := 0.0
+					if memberValue != nil {
+						value = memberValue.(float64)
+					}
+					recordField = fmt.Sprintf("\"%s\":\"%f\"", strings.Split(field, ".")[1], value)
+				default:
+					recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], fmt.Sprintf("%s", memberValue))
 				}
-				// Convert the time to a Unix timestamp (int64)
-				timestampMicros := types.TimeToTIMESTAMP_MICROS(timestamp, false)
-				recordField = fmt.Sprintf("\"%s\":\"%d\"", strings.Split(field, ".")[1], timestampMicros)
-			case "BOOLEAN":
-				recordField = fmt.Sprintf("\"%s\":\"%t\"", strings.Split(field, ".")[1], memberValue.(bool))
-			case "FLOAT":
-				recordField = fmt.Sprintf("\"%s\":\"%f\"", strings.Split(field, ".")[1], memberValue.(float64))
-			default:
-				recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], fmt.Sprintf("%s", memberValue))
+				recordFields = append(recordFields, recordField)
 			}
-			//fmt.Println(recordField)
-			recordFields = append(recordFields, recordField)
+			recordString := strings.Join(recordFields, ",")
+			rec = fmt.Sprintf(rec, recordString)
+			if err = pw.Write(rec); err != nil {
+				log.Printf("Write error %s", err.Error())
+			}
 		}
-		recordString := strings.Join(recordFields, ",")
-		rec = fmt.Sprintf(rec, recordString)
-		if err = pw.Write(rec); err != nil {
-			log.Printf("Write error %s", err.Error())
+
+		log.Printf("Write Finished")
+		// Ensure all buffered data is flushed to disk
+		if err := pw.WriteStop(); err != nil {
+			fmt.Println("Error writing Parquet file:", err)
+			return false, err
 		}
+
+		// Close the file writer
+		if err := fw.Close(); err != nil {
+			fmt.Println("Error closing Parquet file writer:", err)
+			return false, err
+		}
+
+		return false, nil
 	}
 
-	log.Printf("Write Finished")
-	offset = offset + limit
-	query = Query{
-		Dimensions:     query.Dimensions,
-		Ungrouped:      query.Ungrouped,
-		Limit:          limit,
-		Offset:         offset,
-		ResponseFormat: "compact",
-	}
-	err = writeDataToParquet(conf, limit, offset, query, dirPath)
-	if err != nil {
-		return err
-	}
-	// Ensure all buffered data is flushed to disk
-	if err := pw.WriteStop(); err != nil {
-		fmt.Println("Error writing Parquet file:", err)
-		return err
-	}
-
-	// Close the file writer
-	if err := fw.Close(); err != nil {
-		fmt.Println("Error closing Parquet file writer:", err)
-		return err
-	}
-
-	return nil
+	return true, nil
 }
 
 func createDirectory(dirPath string) string {
@@ -352,4 +368,14 @@ func createDirectory(dirPath string) string {
 		return ""
 	}
 	return timestampDirPath
+}
+
+func writeIfDataExists(conf *ApiSourceProperties, query Query) (int, *ApiResponse, error) {
+	response, err := getDataFromLens2(conf, query)
+	if err != nil {
+		return 0, nil, err
+	}
+	count := len(response.Data.Dataset)
+
+	return count, response, nil
 }
