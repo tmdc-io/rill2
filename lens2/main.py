@@ -1,4 +1,6 @@
-from utils import * 
+from utils import *
+import sys
+import subprocess
 
 replace_chars = lambda s: s.replace('`', '').replace('TABLE.', '').replace('{', ''). \
     replace('}', '').replace('$', '')
@@ -12,7 +14,7 @@ def create_board_yaml(lens_meta):
         t_v_name = v['name']
         meta_info = v.get('meta', {})
         if 'export_to_board' in meta_info.keys() and meta_info['export_to_board'] is True:
-            print(f"Generating board yaml for `{v['type']}` - {t_v_name}")
+            print(f"✅ Processing {v['type']}:{t_v_name}")
             if v['type'] == 'table' and v['public']:
                 load_data_obj = {"dimensions": [], "name": t_v_name}
                 dimensions = []
@@ -109,9 +111,12 @@ def create_board_yaml(lens_meta):
                 else:
                     print(f"No dimension found  for view - `{v['name']}`")
         else:
-            print(f"Skipping `{v['type']}` `{t_v_name}` as it's meta does not contains `export_to_board` key or set "
-                  f"to `False`")
+            print(f"❌ Skipped {v['type']}:{t_v_name}")
     return
 
-meta = get_lens_meta()
-create_board_yaml(meta)
+if __name__ == "__main__":
+    meta = get_lens_meta()
+    create_board_yaml(meta)
+
+    # delegate downstream
+    subprocess.call(sys.argv[1:])

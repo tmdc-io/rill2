@@ -5,7 +5,7 @@ import requests
 import yaml
 from sql_metadata import Parser
 
-from constants import LENS2_BASE_URL, LENS2_NAME, DATAOS_USER_APIKEY
+from constants import LENS2_BASE_URL, LENS2_NAME, DATAOS_RUN_AS_APIKEY
 
 
 def get_env_or_throw(env_name):
@@ -25,7 +25,7 @@ def make_api_call_with_headers(api_url, headers):
 def get_lens_meta():
     lens2_base_url = get_env_or_throw(LENS2_BASE_URL)
     lens2_name = get_env_or_throw(LENS2_NAME)
-    apikey = get_env_or_throw(DATAOS_USER_APIKEY)
+    apikey = get_env_or_throw(DATAOS_RUN_AS_APIKEY)
 
     url = f"{lens2_base_url}/{lens2_name}/v2/meta?showPrivate=true"
     headers = {"apikey": apikey}
@@ -68,22 +68,32 @@ def get_sql_expression(agg_type=None, sql=None, table_name=None, is_prefix=None)
 
 def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_kv=None,
                     data_obj=None):  # assumption data_dir = /etc/dataos/work/data/tableOrViewName
-    if not os.path.exists(lens_name):
-        os.makedirs(lens_name, exist_ok=False)
+
+    # Models
+    model_path = os.path.join(os.getcwd(), "models")
+    if not os.path.exists(model_path):
+        os.makedirs(model_path, exist_ok=False)
+
+    # Sources
+    source_path = os.path.join(os.getcwd(), "sources")
+    if not os.path.exists(source_path):
+        os.makedirs(source_path, exist_ok=False)
+
+    # Dashboard
+    dashboard_path = os.path.join(os.getcwd(), f"dashboards")
+    if not os.path.exists(dashboard_path):
+        os.makedirs(dashboard_path, exist_ok=False)
+
 
     # Required rill file
-    rill_path = os.path.join(lens_name, "rill.yaml")
+    rill_path = os.path.join(os.getcwd(), "rill.yaml")
     with open(rill_path, 'w') as file:
         board_data = {"compiler": "rill",
                       "name": lens_name}
         file.write(yaml.dump(board_data, default_flow_style=False, sort_keys=False))
 
-    # create sources yaml
-    source_path = os.path.join(lens_name, "sources")
-    if not os.path.exists(source_path):
-        os.makedirs(source_path, exist_ok=False)
-    # Adding source files
-    t_v_path = os.path.join(source_path, f"{data_obj['name']}.yaml")
+    # source files
+    t_v_path = os.path.join(source_path, f"{data_obj['name']}_source.yaml")
     with open(t_v_path, 'w') as file:
         source = {
             "connector": "local_file",
@@ -97,22 +107,16 @@ def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_k
                     "start": 0,
                     "end": -1
                 },
-                "apikey": get_env_or_throw(DATAOS_USER_APIKEY)
+                "apikey": get_env_or_throw(DATAOS_RUN_AS_APIKEY)
             }
         }
         file.write(yaml.dump(source, default_flow_style=False, sort_keys=False))
 
-    # create models yaml
-    model_path = os.path.join(lens_name, "models")
-    if not os.path.exists(model_path):
-        os.makedirs(model_path, exist_ok=False)
+    # models yaml
     with open(os.path.join(model_path, f"{data_obj['name']}_model.sql"), 'w') as file:
-        file.write(f"""SELECT * FROM {data_obj['name']}""")
+        file.write(f"""SELECT * FROM {data_obj['name']}_source""")
 
-    # create dashboards yaml
-    dashboard_path = os.path.join(lens_name, f"dashboards")
-    if not os.path.exists(dashboard_path):
-        os.makedirs(dashboard_path, exist_ok=False)
+    # dashboards yaml
     dashboard_data = {
         "title": data_obj['name'],
         "model": f"{data_obj['name']}_model",
@@ -125,5 +129,5 @@ def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_k
             "measures": measures
         }
     )
-    with open(os.path.join(dashboard_path, f"{data_obj['name']}_dashboard.yaml"), 'w') as file:
+    with open(os.path.join(dashboard_path, f"{data_obj['name']}.yaml"), 'w') as file:
         file.write(yaml.dump(dashboard_data, default_flow_style=False, sort_keys=False))
