@@ -23,6 +23,7 @@
   import SourceMenuItems from "./SourceMenuItems.svelte";
   import SourceTooltip from "./SourceTooltip.svelte";
   import { addSourceModal } from "../modal/add-source-visibility";
+    import NavigationEntryRefresh from "@rilldata/web-common/layout/navigation/NavigationEntryRefresh.svelte";
 
   $: sourceNames = useSourceFileNames($runtime.instanceId);
   $: modelNames = useModelFileNames($runtime.instanceId);
@@ -72,7 +73,7 @@
           animate:flip={{ duration: 200 }}
           out:slide|global={{ duration: LIST_SLIDE_DURATION }}
         >
-          <NavigationEntry
+          <NavigationEntryRefresh
             name={sourceName}
             href={`/source/${sourceName}`}
             open={$page.url.pathname === `/source/${sourceName}`}
@@ -98,7 +99,7 @@
                 }}
               />
             </svelte:fragment>
-          </NavigationEntry>
+          </NavigationEntryRefresh>
         </div>
       {/each}
     {/if}

@@ -136,7 +136,7 @@
   }
 </script>
 
-<MenuItem icon on:select={() => handleCreateModel()}>
+<!-- <MenuItem icon on:select={() => handleCreateModel()}>
   <Model slot="icon" />
   Create new model
 </MenuItem>
@@ -162,7 +162,7 @@
       Source is being ingested
     {/if}
   </svelte:fragment>
-</MenuItem>
+</MenuItem> -->
 
 <MenuItem icon on:select={() => onRefreshSource(sourceName)}>
   <svelte:fragment slot="icon">

@@ -208,7 +208,7 @@
         dashboardName,
       )}
       <NavigationEntry
-        showContextMenu={!$readOnly}
+        showContextMenu={false}
         expandable={false}
         name={dashboardName}
         href={`/dashboard/${dashboardName}`}

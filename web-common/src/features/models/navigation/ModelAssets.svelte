@@ -59,6 +59,7 @@
         name={modelName}
         href={`/model/${modelName}`}
         open={$page.url.pathname === `/model/${modelName}`}
+        showContextMenu={false}
       >
         <svelte:fragment slot="more">
           <div transition:slide={{ duration: LIST_SLIDE_DURATION }}>
