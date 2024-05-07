@@ -48,8 +48,8 @@ proto.generate:
 
 .PHONY: docker-build
 docker-build:
-	docker build -t rubiklabs/lens2-iris:0.42.3-11 -f lens2/Dockerfile .
-	docker push rubiklabs/lens2-iris:0.42.3-11
+	docker build -t rubiklabs/lens2-iris:0.42.3-12 -f lens2/Dockerfile .
+	docker push rubiklabs/lens2-iris:0.42.3-12
 
 .PHONY: docker-run
 docker-run:
@@ -59,4 +59,4 @@ docker-run:
 		-e LENS2_BASE_URL=https://emerging-hawk.dataos.app/lens2/api \
         -e HEIMDALL_URL=https://emerging-hawk.dataos.app/heimdall \
         -e DATAOS_RUN_AS_APIKEY=cmFrZXNoX3Rlc3RpbmcuOWYzNGFiYzktMmFlMi00ZWRlLTk0MjYtOTUyMDNhZDkxOGQy \
-        rubiklabs/lens2-iris:0.42.3-11
+        rubiklabs/lens2-iris:0.42.3-12
