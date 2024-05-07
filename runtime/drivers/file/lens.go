@@ -111,7 +111,6 @@ func fetchLensData(props map[string]any) (string, error) {
 
 // Parse Source Properties to struct ApiSourceProperties
 func parseSourceProps(props map[string]any) (*ApiSourceProperties, error) {
-	// Todo: put proper validation for props
 	conf := &ApiSourceProperties{}
 	err := mapstructure.Decode(props, conf)
 	if err != nil {
@@ -121,9 +120,13 @@ func parseSourceProps(props map[string]any) (*ApiSourceProperties, error) {
 }
 
 func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, error) {
+	envApiKey := os.Getenv("DATAOS_RUN_AS_APIKEY")
+	if len(envApiKey) == 0 {
+		return nil, errors.New("no apikey given, please provide `DATAOS_RUN_AS_APIKEY` as env variable")
+	}
 	apiConf := Lens{
 		BaseUri: fmt.Sprintf("%s/%s/v2/load", strings.Trim(conf.Lens.BaseUri, "/"), conf.Lens.Name),
-		Apikey:  fmt.Sprintf("Bearer %s", conf.Lens.Apikey),
+		Apikey:  fmt.Sprintf("Bearer %s", envApiKey),
 	}
 
 	// fetch data from lens api
@@ -135,7 +138,6 @@ func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, err
 	var response ApiResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		log.Println(err.Error(), response.Error)
-		//log.Printf("error unmarshalling JSON: %s\n", err.Error())
 		return nil, err
 	}
 

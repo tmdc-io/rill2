@@ -28,13 +28,13 @@ COPY --from=builder /app/rill /usr/local/bin/iris
 
 RUN chmod 777 /usr/local/bin/iris
 RUN groupadd -g 1001 iris && useradd -m -u 1001 -s /bin/sh -g iris iris
-
 RUN iris runtime install-duckdb-extensions
 
 WORKDIR /etc/dataos/work
-COPY lens2 /etc/dataos/work/scripts
-RUN python3 -m pip install -r scripts/requirements.txt
-ENTRYPOINT ["python3", "scripts/main.py"]
+
+COPY lens2 /app
+RUN python3 -m pip install -r /app/requirements.txt
+ENTRYPOINT ["python3", "/app/main.py"]
 CMD ["iris", "start", "--readonly"]
 
-# python3 scripts/main.py && iris start --readonly
+# python3 /app/main.py && iris start --readonly
