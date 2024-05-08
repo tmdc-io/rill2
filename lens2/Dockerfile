@@ -35,6 +35,6 @@ WORKDIR /etc/dataos/work
 COPY lens2 /app
 RUN python3 -m pip install -r /app/requirements.txt
 ENTRYPOINT ["python3", "/app/main.py"]
-CMD ["iris", "start", "--readonly"]
+CMD ["iris", "start"]
 
 # python3 /app/main.py && iris start --readonly
