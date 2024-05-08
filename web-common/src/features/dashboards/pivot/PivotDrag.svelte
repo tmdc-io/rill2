@@ -36,7 +36,7 @@
     </div>
   </button>
 
-  <div class="w-full h-fit overflow-scroll px-[2px] pb-2">
+  <div class="w-full h-fit overflow-auto px-[2px] pb-2">
     {#if !collapsed}
       {#if items.length}
         <DragList {items} zone={title} />

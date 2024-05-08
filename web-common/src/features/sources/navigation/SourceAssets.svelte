@@ -77,7 +77,7 @@
             immediatelyNavigate={false}
             on:command-click={() => queryHandler(sourceName)}
             showContextMenu={false}
-            expandable={false}
+            expandable={true}
           >
             <svelte:fragment slot="more">
               <div transition:slide={{ duration: LIST_SLIDE_DURATION }}>
@@ -85,9 +85,9 @@
               </div>
             </svelte:fragment>
 
-            <svelte:fragment slot="tooltip-content">
-              <SourceTooltip {sourceName} connector="" />
-            </svelte:fragment>
+<!--            <svelte:fragment slot="tooltip-content">-->
+<!--              <SourceTooltip {sourceName} connector="" />-->
+<!--            </svelte:fragment>-->
 
             <svelte:fragment slot="menu-items" let:toggleMenu>
               <SourceMenuItems

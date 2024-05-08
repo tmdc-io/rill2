@@ -39,7 +39,7 @@
   }
 
   .content {
-    @apply flex w-full flex-col bg-slate-100 overflow-hidden;
+    @apply flex w-full flex-col bg-white overflow-hidden;
   }
 
   .table-view {

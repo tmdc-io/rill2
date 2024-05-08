@@ -5,7 +5,7 @@
   import Inspector from "./Inspector.svelte";
 
   export let inspector = true;
-  export let bgClass = "bg-gray-100";
+  export let bgClass = "bg-white";
 
   const navigationWidth = getContext<Writable<number>>(
     "rill:app:navigation-width-tween",

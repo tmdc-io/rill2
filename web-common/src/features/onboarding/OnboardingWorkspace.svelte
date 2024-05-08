@@ -72,10 +72,10 @@
 </script>
 
 <WorkspaceContainer inspector={false}>
-  <div class="pt-20 px-8 flex flex-col gap-y-6 items-center" slot="body">
-    <div class="text-center">
-      <div class="font-bold">Lens2 Infoboard</div>
-      <p>Building data intuition at every step of analysis</p>
+  <div class="pt-20 px-8 flex flex-col gap-y-6 items-start" slot="body">
+    <div class="text-left">
+      <div class="font-bold">Lens2 Iris Board</div>
+      <p>Select a <code>Board</code> from the left navigation menu</p>
     </div>
   </div>
 </WorkspaceContainer>

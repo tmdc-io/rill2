@@ -114,20 +114,28 @@
     <div class="w-full flex flex-col h-full">
       <div class="grow">
         <ProjectTitle />
-        {#if isModelerEnabled}
-          <TableAssets />
-          {#if olapConnector === "duckdb"}
-            <SourceAssets />
-          {/if}
-          <!--{#if $isModelingSupportedForCurrentOlapDriver.data}-->
-          <!--  <ModelAssets />-->
-          <!--{/if}-->
-        {/if}
+        <!--{#if isModelerEnabled}-->
+        <!--  <TableAssets />-->
+        <!--  {#if olapConnector === "duckdb"}-->
+        <!--    <SourceAssets />-->
+        <!--  {/if}-->
+        <!--  {#if $isModelingSupportedForCurrentOlapDriver.data}-->
+        <!--    <ModelAssets />-->
+        <!--  {/if}-->
+        <!--{/if}-->
+
+        <br/>
         <DashboardAssets />
-        {#if $customDashboards}
-          <ChartAssets />
-          <CustomDashboardAssets />
+        <hr class="mx-4 py-2" />
+        {#if olapConnector === "duckdb"}
+          <SourceAssets />
         {/if}
+
+        <!--{#if $customDashboards}-->
+        <!--  <ChartAssets />-->
+        <!--  <CustomDashboardAssets />-->
+        <!--{/if}-->
+
         <!--{#if isModelerEnabled}-->
         <!--  <OtherFiles />-->
         <!--{/if}-->

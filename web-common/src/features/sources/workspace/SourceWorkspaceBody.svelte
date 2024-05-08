@@ -46,7 +46,7 @@
   $: isSourceUnsaved = $isSourceUnsavedQuery.data;
 </script>
 
-<div class="editor-pane h-full overflow-hidden w-full flex flex-col">
+<div class="editor-pane bg-white h-full overflow-hidden w-full flex flex-col">
   <WorkspaceEditorContainer>
     <SourceEditor {sourceName} {yaml} />
   </WorkspaceEditorContainer>

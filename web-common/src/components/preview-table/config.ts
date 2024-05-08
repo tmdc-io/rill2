@@ -8,8 +8,8 @@ export const config: VirtualizedTableConfig = {
   rowHeight: 36,
   columnHeaderHeight: 36,
   indexWidth: 60,
-  columnHeaderFontWeightClass: "font-bold",
-  defaultFontWeightClass: "font-semibold",
+  columnHeaderFontWeightClass: "font-semibold",
+  defaultFontWeightClass: "font-normal",
   table: "PreviewTable",
   headerBgColorClass: "bg-gray-100",
 };

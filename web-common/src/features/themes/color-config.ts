@@ -331,16 +331,16 @@ export type ThemeColorKind = "primary" | "secondary" | "muted";
  */
 export const defaultPrimaryColors: LightnessMap = {
   50: "#ecf0ff",
-  100: "#dde4ff",
-  200: "#c2cdff",
-  300: "#9cabff",
-  400: "#757eff",
-  500: "#5655ff",
-  600: "#4735f5",
-  700: "#3542c7",
-  800: "#3125ae",
-  900: "#2c2689",
-  950: "#1c1650",
+  100: "#ddefff",
+  200: "#c2deff",
+  300: "#9cc8ff",
+  400: "#75a5ff",
+  500: "#55a9ff",
+  600: "#1890ff",
+  700: "#3570c7",
+  800: "#2552ae",
+  900: "#263e89",
+  950: "#162550",
 };
 
 // backup pallette of primary colors
