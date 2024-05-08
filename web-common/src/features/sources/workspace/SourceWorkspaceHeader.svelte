@@ -207,18 +207,18 @@
     </svelte:fragment>
     <svelte:fragment slot="cta" let:width={headerWidth}>
       <PanelCTA side="right">
-        <Button
-          disabled={!isSourceUnsaved}
-          on:click={() => onRevertChanges()}
-          type="secondary"
-        >
-          <IconSpaceFixer pullLeft pullRight={isHeaderWidthSmall(headerWidth)}>
-            <UndoIcon size="14px" />
-          </IconSpaceFixer>
-          <ResponsiveButtonText collapse={isHeaderWidthSmall(headerWidth)}>
-            Revert changes
-          </ResponsiveButtonText>
-        </Button>
+<!--        <Button-->
+<!--          disabled={!isSourceUnsaved}-->
+<!--          on:click={() => onRevertChanges()}-->
+<!--          type="secondary"-->
+<!--        >-->
+<!--          <IconSpaceFixer pullLeft pullRight={isHeaderWidthSmall(headerWidth)}>-->
+<!--            <UndoIcon size="14px" />-->
+<!--          </IconSpaceFixer>-->
+<!--          <ResponsiveButtonText collapse={isHeaderWidthSmall(headerWidth)}>-->
+<!--            Revert changes-->
+<!--          </ResponsiveButtonText>-->
+<!--        </Button>-->
         <WithTogglableFloatingElement
           alignment="end"
           distance={8}
@@ -282,17 +282,17 @@
             </MenuItem>
           </Menu>
         </WithTogglableFloatingElement>
-        <Button
-          disabled={isSourceUnsaved || $hasErrors}
-          on:click={handleCreateModelFromSource}
-        >
-          <ResponsiveButtonText collapse={isHeaderWidthSmall(headerWidth)}>
-            Create model
-          </ResponsiveButtonText>
-          <IconSpaceFixer pullLeft pullRight={isHeaderWidthSmall(headerWidth)}>
-            <EnterIcon size="14px" />
-          </IconSpaceFixer>
-        </Button>
+<!--        <Button-->
+<!--          disabled={isSourceUnsaved || $hasErrors}-->
+<!--          on:click={handleCreateModelFromSource}-->
+<!--        >-->
+<!--          <ResponsiveButtonText collapse={isHeaderWidthSmall(headerWidth)}>-->
+<!--            Create model-->
+<!--          </ResponsiveButtonText>-->
+<!--          <IconSpaceFixer pullLeft pullRight={isHeaderWidthSmall(headerWidth)}>-->
+<!--            <EnterIcon size="14px" />-->
+<!--          </IconSpaceFixer>-->
+<!--        </Button>-->
       </PanelCTA>
     </svelte:fragment>
   </WorkspaceHeader>

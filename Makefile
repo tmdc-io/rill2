@@ -1,3 +1,5 @@
+VERSION = 0.42.3-14
+
 .PHONY: cli
 cli: cli.prepare
 	export BASE_PATH="dataos-basepath" && go build -o rill cli/main.go
@@ -48,8 +50,8 @@ proto.generate:
 
 .PHONY: docker-build
 docker-build:
-	docker build -t rubiklabs/lens2-iris:0.42.3-12 -f lens2/Dockerfile .
-	docker push rubiklabs/lens2-iris:0.42.3-12
+	docker build --progress plain -t rubiklabs/lens2-iris:${VERSION} -f lens2/Dockerfile .
+	docker push rubiklabs/lens2-iris:${VERSION}
 
 .PHONY: docker-run
 docker-run:
@@ -59,4 +61,4 @@ docker-run:
 		-e LENS2_BASE_URL=https://emerging-hawk.dataos.app/lens2/api \
         -e HEIMDALL_URL=https://emerging-hawk.dataos.app/heimdall \
         -e DATAOS_RUN_AS_APIKEY=cmFrZXNoX3Rlc3RpbmcuOWYzNGFiYzktMmFlMi00ZWRlLTk0MjYtOTUyMDNhZDkxOGQy \
-        rubiklabs/lens2-iris:0.42.3-12
+        rubiklabs/lens2-iris:${VERSION} iris start

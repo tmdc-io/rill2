@@ -114,15 +114,15 @@
     <div class="w-full flex flex-col h-full">
       <div class="grow">
         <ProjectTitle />
-        <!--{#if isModelerEnabled}-->
+        {#if isModelerEnabled}
           <TableAssets />
           {#if olapConnector === "duckdb"}
             <SourceAssets />
           {/if}
-          {#if $isModelingSupportedForCurrentOlapDriver.data}
-            <ModelAssets />
-          {/if}
-        <!--{/if}-->
+          <!--{#if $isModelingSupportedForCurrentOlapDriver.data}-->
+          <!--  <ModelAssets />-->
+          <!--{/if}-->
+        {/if}
         <DashboardAssets />
         {#if $customDashboards}
           <ChartAssets />

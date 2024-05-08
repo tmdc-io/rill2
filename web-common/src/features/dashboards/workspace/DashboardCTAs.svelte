@@ -26,6 +26,8 @@
   );
 
   const { readOnly } = featureFlags;
+  // $: canEditDashboard = $readOnly === false;
+  $: canAddDashboard = false;
 
   $: dashboardQuery = useDashboard($runtime.instanceId, metricViewName);
   $: dashboardIsIdle =
@@ -56,7 +58,7 @@
   {#if $dashboardPolicyCheck.data}
     <ViewAsButton />
   {/if}
-  {#if !$readOnly}
+  {#if canAddDashboard}
     <Tooltip distance={8}>
       <Button
         disabled={!dashboardIsIdle}

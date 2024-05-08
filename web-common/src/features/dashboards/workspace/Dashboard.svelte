@@ -137,8 +137,8 @@
       {/if}
     </div>
 
-    {#if (isRillDeveloper || $cloudDataViewer) && !expandedMeasureName && !showPivot}
-      <RowsViewerAccordion {metricViewName} />
-    {/if}
+    <!--{#if (isRillDeveloper || $cloudDataViewer) && !expandedMeasureName && !showPivot}-->
+    <!--  <RowsViewerAccordion {metricViewName} />-->
+    <!--{/if}-->
   {/if}
 </section>

@@ -192,9 +192,7 @@
     $dashboardNames?.data?.length === 0;
 </script>
 
-<NavigationHeader bind:show={showMetricsDefs} toggleText="dashboards"
-  >Dashboards</NavigationHeader
->
+<NavigationHeader bind:show={showMetricsDefs} toggleText="dashboards">Boards</NavigationHeader>
 
 {#if showMetricsDefs && $dashboardNames.data}
   <div
@@ -208,12 +206,12 @@
         dashboardName,
       )}
       <NavigationEntry
-        showContextMenu={!$readOnly}
+        showContextMenu={false}
         expandable={false}
         name={dashboardName}
         href={`/dashboard/${dashboardName}`}
-        open={$page.url.pathname === `/dashboard/${dashboardName}` ||
-          $page.url.pathname === `/dashboard/${dashboardName}/edit`}
+        <!-- open={$page.url.pathname === `/dashboard/${dashboardName}` || $page.url.pathname === `/dashboard/${dashboardName}/edit`} -->
+        open={$page.url.pathname === `/dashboard/${dashboardName}`}
       >
         <svelte:fragment slot="menu-items">
           {@const selectionError = MetricsSourceSelectionError(
