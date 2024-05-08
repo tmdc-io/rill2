@@ -19,20 +19,20 @@
       >
     </div>
   {:else}
-    <EmptyTableIcon />
-    <div class="flex flex-col items-center gap-y-2">
-      <div class="font-semibold text-gray-800 mt-1 text-lg">
-        Your pivot table looks lonely
-      </div>
-      <div class="text-gray-600 text-base">
-        Give it some data to keep it company.
-      </div>
-    </div>
-    <div class="text-gray-600">
-      Learn more about pivot tables in our <a
-        target="_blank"
-        href="https://docs.rilldata.com/">docs</a
-      >.
-    </div>
+<!--    <EmptyTableIcon />-->
+<!--    <div class="flex flex-col items-center gap-y-2">-->
+<!--      <div class="font-semibold text-gray-800 mt-1 text-lg">-->
+<!--        Your pivot table looks lonely-->
+<!--      </div>-->
+<!--      <div class="text-gray-600 text-base">-->
+<!--        Give it some data to keep it company.-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    <div class="text-gray-600">-->
+<!--      Learn more about pivot tables in our <a-->
+<!--        target="_blank"-->
+<!--        href="https://docs.rilldata.com/">docs</a-->
+<!--      >.-->
+<!--    </div>-->
   {/if}
 </div>

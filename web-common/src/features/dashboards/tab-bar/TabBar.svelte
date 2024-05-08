@@ -67,9 +67,9 @@
         <Icon />
         <div class="flex gap-x-1 items-center group">
           {label}
-          {#if beta}
-            <Tag height={18} color={selected ? "blue" : "gray"}>BETA</Tag>
-          {/if}
+          <!--{#if beta}-->
+          <!--  <Tag height={18} color={selected ? "blue" : "gray"}>BETA</Tag>-->
+          <!--{/if}-->
         </div>
       </Tab>
     {/each}

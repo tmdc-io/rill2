@@ -61,9 +61,7 @@
   $: hasNoAssets = $sourceNames.data?.length === 0;
 </script>
 
-<NavigationHeader bind:show={showTables} toggleText="sources"
-  >Sources</NavigationHeader
->
+<NavigationHeader bind:show={showTables} toggleText="sources">Lens sources</NavigationHeader>
 
 {#if showTables}
   <div class="pb-3" transition:slide={{ duration: LIST_SLIDE_DURATION }}>
@@ -79,6 +77,8 @@
             open={$page.url.pathname === `/source/${sourceName}`}
             immediatelyNavigate={false}
             on:command-click={() => queryHandler(sourceName)}
+            showContextMenu={false}
+            expandable={true}
           >
             <svelte:fragment slot="more">
               <div transition:slide={{ duration: LIST_SLIDE_DURATION }}>
@@ -86,9 +86,9 @@
               </div>
             </svelte:fragment>
 
-            <svelte:fragment slot="tooltip-content">
-              <SourceTooltip {sourceName} connector="" />
-            </svelte:fragment>
+<!--            <svelte:fragment slot="tooltip-content">-->
+<!--              <SourceTooltip {sourceName} connector="" />-->
+<!--            </svelte:fragment>-->
 
             <svelte:fragment slot="menu-items" let:toggleMenu>
               <SourceMenuItems

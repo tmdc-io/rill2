@@ -82,13 +82,12 @@
         </svelte:fragment>
       </NavigationEntry>
     {/each}
-
-<!--    <AddAssetButton-->
-<!--      id="create-model-button"-->
-<!--      label="Add model"-->
-<!--      bold={hasSourceButNoModels}-->
-<!--      on:click={handleAddModel}-->
-<!--    />-->
+    <AddAssetButton
+      id="create-model-button"
+      label="Add model"
+      bold={hasSourceButNoModels}
+      on:click={handleAddModel}
+    />
   </div>
 {/if}
 

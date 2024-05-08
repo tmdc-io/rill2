@@ -249,6 +249,7 @@ PinnedColumns – any reference columns pinned on the right side of the overall 
 
 <div
   bind:this={container}
+  style:font-size="12px"
   style:width="100%"
   style:height="100%"
   class="overflow-auto grid"

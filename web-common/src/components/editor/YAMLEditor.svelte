@@ -29,6 +29,8 @@
           yaml(),
           // this will catch certain events and dispatch them to the parent
           bindEditorEventsToDispatcher(dispatch),
+          // Read-only
+          EditorState.readOnly.of(true),
         ],
       }),
       parent: container,

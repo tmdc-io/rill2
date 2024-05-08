@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/rilldata/rill/cli/pkg/gitutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,7 +20,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"github.com/rilldata/rill/cli/pkg/cmdutil"
-	"github.com/rilldata/rill/cli/pkg/gitutil"
 	"github.com/rilldata/rill/runtime/pkg/graceful"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -30,7 +30,8 @@ const (
 	minNodeVersion = "18"
 	stateDirCloud  = "dev-cloud-state"
 	stateDirLocal  = "dev-project"
-	rillGithubURL  = "https://github.com/rilldata/rill"
+	// rillGithubURL  = "https://github.com/rilldata/rill"
+	rillGithubURL = "https://github.com/tmdc-io/rill2"
 )
 
 var (
