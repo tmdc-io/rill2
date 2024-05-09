@@ -7,6 +7,9 @@ from sql_metadata import Parser
 
 from constants import LENS2_BASE_URL, LENS2_NAME, DATAOS_RUN_AS_APIKEY
 
+replace_chars = lambda s: s.replace('`', '').replace('TABLE.', '').replace('{', ''). \
+    replace('}', '').replace('$', '')
+
 
 def get_env_or_throw(env_name):
     """Get the value of an environment variable or raise an error."""
@@ -84,7 +87,6 @@ def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_k
     if not os.path.exists(dashboard_path):
         os.makedirs(dashboard_path, exist_ok=False)
 
-
     # Required rill file
     rill_path = os.path.join(os.getcwd(), "rill.yaml")
     with open(rill_path, 'w') as file:
@@ -106,8 +108,7 @@ def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_k
                     "batch": 50000,
                     "start": 0,
                     "end": -1
-                },
-                "apikey": get_env_or_throw(DATAOS_RUN_AS_APIKEY)
+                }
             }
         }
         file.write(yaml.dump(source, default_flow_style=False, sort_keys=False))
@@ -118,7 +119,7 @@ def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_k
 
     # dashboards yaml
     dashboard_data = {
-        "title": data_obj['name'],
+        "title": data_obj['title'],
         "model": f"{data_obj['name']}_model",
     }
     if additional_kv:
