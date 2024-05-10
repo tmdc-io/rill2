@@ -10,7 +10,6 @@ import (
 	"github.com/xitongsys/parquet-go/types"
 	"github.com/xitongsys/parquet-go/writer"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -69,8 +68,8 @@ type ApiResponse struct {
 	Error      interface{} `json:"error"`
 }
 
-func fetchLensData(props map[string]any) (string, error) {
-	conf, err := parseSourceProps(props)
+func (c *connection) fetchLensData(props map[string]any) (string, error) {
+	conf, err := c.parseSourceProps(props)
 	if err != nil {
 		return "", err
 	}
@@ -84,17 +83,22 @@ func fetchLensData(props map[string]any) (string, error) {
 		ResponseFormat: "compact",
 	}
 
-	dirPath := createDirectory(filepath.Dir(conf.Path))
-	if len(dirPath) == 0 {
-		return "", errors.New("directory creation failed")
+	dirPath, err := c.createDirectory(filepath.Dir(conf.Path))
+	if err != nil {
+		return "", err
 	}
+
 	offset := conf.Lens.Body.Start
+
+	c.logger.Info("starting writing data...")
 	for {
-		complete, err := writeDataToParquet(conf, conf.Lens.Body.Batch, offset, query, dirPath)
+		c.logger.Debug(fmt.Sprintf("query struct for Parquet Data Write: %v", query))
+		complete, err := c.writeDataToParquet(conf, conf.Lens.Body.Batch, offset, query, dirPath)
 		if err != nil {
 			return "", err
 		}
 		if complete {
+			c.logger.Info("Writing data to Parquet files finished...")
 			break
 		}
 		offset = offset + conf.Lens.Body.Batch
@@ -110,18 +114,21 @@ func fetchLensData(props map[string]any) (string, error) {
 }
 
 // Parse Source Properties to struct ApiSourceProperties
-func parseSourceProps(props map[string]any) (*ApiSourceProperties, error) {
+func (c *connection) parseSourceProps(props map[string]any) (*ApiSourceProperties, error) {
 	conf := &ApiSourceProperties{}
 	err := mapstructure.Decode(props, conf)
 	if err != nil {
+		c.logger.Error(fmt.Sprintf("conversion of props to conf structure: %s", err.Error()))
 		return nil, err
 	}
+	c.logger.Debug(fmt.Sprintf("conf: %v", *conf))
 	return conf, nil
 }
 
-func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, error) {
+func (c *connection) getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, error) {
 	envApiKey := os.Getenv("DATAOS_RUN_AS_APIKEY")
 	if len(envApiKey) == 0 {
+		c.logger.Error("no apikey provide, `DATAOS_RUN_AS_APIKEY` missing")
 		return nil, errors.New("no apikey given, please provide `DATAOS_RUN_AS_APIKEY` as env variable")
 	}
 	apiConf := Lens{
@@ -130,14 +137,14 @@ func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, err
 	}
 
 	// fetch data from lens api
-	body, err := httpApiCall(apiConf, map[string]any{"query": query})
+	body, err := c.httpApiCall(apiConf, map[string]any{"query": query})
 	if err != nil {
 		return nil, err
 	}
 
 	var response ApiResponse
 	if err := json.Unmarshal(body, &response); err != nil {
-		log.Println(err.Error(), response.Error)
+		c.logger.Error(fmt.Sprintf("Json Unmarshalling failed for ResponseBody to ApiResponse: %s", err.Error()))
 		return nil, err
 	}
 
@@ -145,53 +152,61 @@ func getDataFromLens2(conf *ApiSourceProperties, query Query) (*ApiResponse, err
 		switch response.Error.(type) {
 		case string:
 			if response.Error.(string) == "Continue wait" {
-				data, err := getDataFromLens2(conf, query)
+				c.logger.Debug("Response returned Continue wait...")
+				data, err := c.getDataFromLens2(conf, query)
 				if err != nil {
 					return nil, err
 				}
 				return data, nil
 			} else {
+				c.logger.Error(fmt.Sprintf("Response Body contains Error: %s", response.Error.(string)))
 				return nil, errors.New(response.Error.(string))
 			}
 		case map[string]interface{}:
 			if response.Error.(map[string]interface{}) != nil {
+				c.logger.Error(fmt.Sprintf("Response Body contains Error: %v", response.Error))
 				return nil, errors.New(fmt.Sprintf("%v", response.Error))
 			} else {
+				c.logger.Error("Response Body return Error with no message")
 				return nil, errors.New("no response error fetched")
 			}
 		default:
+			c.logger.Error(fmt.Sprintf("Invalid error response from API: %v", response.Error))
 			return nil, errors.New(fmt.Sprintf("Invalid error response: %v", response.Error))
 		}
 	}
-
 	return &response, nil
 }
 
 // Http Request Method return JSON data
-func httpApiCall(conf Lens, payload map[string]any) ([]byte, error) {
+func (c *connection) httpApiCall(conf Lens, payload map[string]any) ([]byte, error) {
 	// prepare body for API call
 	var err error = nil
 	var bodyBytes []byte = nil
+
+	c.logger.Debug(fmt.Sprintf("Payload for API Call: %v", payload))
 	if payload != nil {
 		bodyBytes, err = json.Marshal(payload)
 		if err != nil {
-			log.Printf(fmt.Sprintf("Error marshaling request body: %s", err.Error()))
+			c.logger.Error(fmt.Sprintf("Error marshaling request body: %s", err.Error()))
 			return nil, err
 		}
 	}
 
-	// Add query parameters to the URI
 	uri, err := url.Parse(conf.BaseUri)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Error parsing URI: %s", err.Error()))
+		c.logger.Error(fmt.Sprintf("Error parsing URI: %s", err.Error()))
 		return nil, err
 	}
+	c.logger.Debug(fmt.Sprintf("URI for API Call: %v", uri))
 
 	// Create a new HTTP Request
 	req, err := http.NewRequest("POST", uri.String(), bytes.NewBuffer(bodyBytes))
 	if err != nil {
+		c.logger.Error(fmt.Sprintf("failed creating a new http request: %s", err.Error()))
 		return nil, err
 	}
+	c.logger.Debug(fmt.Sprintf("Http Request without Headers: %v", req))
 
 	// Set the request headers
 	req.Header.Set("Content-Type", "application/json")
@@ -201,7 +216,7 @@ func httpApiCall(conf Lens, payload map[string]any) ([]byte, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Error making HTTP request: %s", err.Error()))
+		c.logger.Error(fmt.Sprintf("Error making HTTP request: %s", err.Error()))
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -209,10 +224,9 @@ func httpApiCall(conf Lens, payload map[string]any) ([]byte, error) {
 	// Read the response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf(fmt.Sprintf("Error reading response body: %s", err.Error()))
+		c.logger.Error(fmt.Sprintf("Error reading response body: %s", err.Error()))
 		return nil, err
 	}
-
 	return body, nil
 }
 
@@ -227,7 +241,7 @@ func getParquetDatatype(dtype string) string {
 }
 
 // Function to generate Parquet schema based on field details
-func getSchema(response *ApiResponse) (string, error) {
+func (c *connection) getSchema(response *ApiResponse) (string, error) {
 	var jsonSchemaStrings []string = nil
 	for _, member := range response.Data.Members {
 		// create field schema element
@@ -247,7 +261,7 @@ func getSchema(response *ApiResponse) (string, error) {
 		// Marshal the map into JSON
 		jsonString, err := json.Marshal(data)
 		if err != nil {
-			log.Printf("Error marshaling JSON: %s", err.Error())
+			c.logger.Error(fmt.Sprintf("Error marshaling JSON of parquet schema data: %s", err.Error()))
 			return "", err
 		}
 		// collect all schema elements
@@ -258,32 +272,37 @@ func getSchema(response *ApiResponse) (string, error) {
 	return jsonSchema, nil
 }
 
-func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Query, dirPath string) (bool, error) {
+func (c *connection) writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Query, dirPath string) (bool, error) {
 	if offset != 0 && offset == limit*(conf.Lens.Body.End+1) {
 		return true, nil
 	}
 	var fileName string
 	fileName = fmt.Sprintf("%s/data_%d_%d.parquet", dirPath, conf.Lens.Body.Start, offset)
+	c.logger.Debug(fmt.Sprintf("File Name: %s", fileName))
 
-	count, response, err := writeIfDataExists(conf, query)
+	count, response, err := c.writeIfDataExists(conf, query)
 	if err != nil {
 		return false, err
 	}
 
 	if count > 0 {
-		schema, err := getSchema(response)
+		schema, err := c.getSchema(response)
 		if err != nil {
 			return false, err
 		}
+		c.logger.Debug(fmt.Sprintf("Parquet Schema Created: %s", schema))
 
 		// write data to parquet file
 		fw, err := local.NewLocalFileWriter(fileName)
 		if err != nil {
+			c.logger.Error(fmt.Sprintf("Parquet Local File Writer failed: %s", err.Error()))
 			return false, err
 		}
 		defer fw.Close()
-		pw, err := writer.NewJSONWriter(schema, fw, 4)
+
+		pw, err := writer.NewJSONWriter(schema, fw, 10)
 		if err != nil {
+			c.logger.Error(fmt.Sprintf("Parquet Json Writer failed: %s", err.Error()))
 			return false, err
 		}
 		defer pw.WriteStop()
@@ -303,6 +322,7 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 						layout := "2006-01-02T15:04:05.000"
 						timestamp, err := time.Parse(layout, memberValue.(string))
 						if err != nil {
+							c.logger.Error(fmt.Sprintf("time parsing error while creating recordField: %s", err.Error()))
 							return false, err
 						}
 						// Convert the time to a Unix timestamp (int64)
@@ -323,48 +343,51 @@ func writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Quer
 			recordString := strings.Join(recordFields, ",")
 			rec = fmt.Sprintf(rec, recordString)
 			if err = pw.Write(rec); err != nil {
-				log.Printf("Write error %s", err.Error())
+				c.logger.Error(fmt.Sprintf("Parquet Writer failed to write: %s", err.Error()))
+				return false, err
 			}
 		}
 
-		log.Printf("Write Finished")
+		c.logger.Debug("Parquet Batch Write Finished")
 		// Ensure all buffered data is flushed to disk
 		if err := pw.WriteStop(); err != nil {
-			fmt.Println("Error writing Parquet file:", err)
+			c.logger.Error(fmt.Sprintf("Error closing Parquet Json file writer: %s", err.Error()))
 			return false, err
 		}
 
 		// Close the file writer
 		if err := fw.Close(); err != nil {
-			fmt.Println("Error closing Parquet file writer:", err)
+			c.logger.Error(fmt.Sprintf("Error closing Parquet Local file writer: %s", err.Error()))
 			return false, err
 		}
-
 		return false, nil
 	}
-
 	return true, nil
 }
 
-func createDirectory(dirPath string) string {
+func (c *connection) createDirectory(dirPath string) (string, error) {
 	// Create the directory
-	currentTime := time.Now()
-	timestamp := currentTime.Format("2006-01-02-15-04")
+	currentTime := time.Now().Format("2006-01-02-150405-MST")
 
-	timestampDirPath := fmt.Sprintf("%s/%s", dirPath, timestamp)
-	if err := os.MkdirAll(timestampDirPath, 0755); err != nil {
-		log.Printf("Error creating directory: %s", err)
-		return ""
+	timestampDirPath := fmt.Sprintf("%s/%s", dirPath, currentTime)
+	if len(timestampDirPath) == 0 {
+		c.logger.Error("directory path not created properly")
+		return "", errors.New("directory path not created properly")
 	}
-	return timestampDirPath
+	if err := os.MkdirAll(timestampDirPath, 0755); err != nil {
+		c.logger.Error(fmt.Sprintf("Error creating directory: %s", err.Error()))
+		return "", err
+	}
+	c.logger.Debug(fmt.Sprintf("directory created with path: %s", timestampDirPath))
+	return timestampDirPath, nil
 }
 
-func writeIfDataExists(conf *ApiSourceProperties, query Query) (int, *ApiResponse, error) {
-	response, err := getDataFromLens2(conf, query)
+func (c *connection) writeIfDataExists(conf *ApiSourceProperties, query Query) (int, *ApiResponse, error) {
+	response, err := c.getDataFromLens2(conf, query)
 	if err != nil {
 		return 0, nil, err
 	}
 	count := len(response.Data.Dataset)
-
+	c.logger.Debug(fmt.Sprintf("Data Row Count from Response: %d", count))
 	return count, response, nil
 }

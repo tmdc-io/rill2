@@ -10,7 +10,7 @@ import (
 // FilePaths implements drivers.FileStore
 func (c *connection) FilePaths(ctx context.Context, src map[string]any) ([]string, error) {
 	if src["lens"] != nil {
-		path, err := fetchLensData(src)
+		path, err := c.fetchLensData(src)
 		if err != nil {
 			return nil, err
 		}
