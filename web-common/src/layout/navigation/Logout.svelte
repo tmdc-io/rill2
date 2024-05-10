@@ -10,5 +10,5 @@
     }
 </style>
 <div class="default-text">
-    Hello stranger! We could not find your JWT Token (<a href="https://en.wikipedia.org/wiki/JSON_Web_Token" target="_blank">Learn more</a>) Please click here to <a href={url} target="_blank">Go Home</a>. It will automatically generate your token.
+    Hello stranger! We could not find your JWT Token (<a href="https://en.wikipedia.org/wiki/JSON_Web_Token" target="_blank">Learn more</a>) Please click here to <a href={url} target="_blank">Go Home</a> and login. It will automatically generate your token. Come back, and refresh this page.
 </div>
