@@ -22,6 +22,7 @@ def get_env_or_throw(env_name):
 def make_api_call_with_headers(api_url, headers):
     """Make an API call with headers."""
     response = requests.get(api_url, headers=headers)
+    response.raise_for_status()
     return response
 
 
@@ -69,8 +70,9 @@ def get_sql_expression(agg_type=None, sql=None, table_name=None, is_prefix=None)
         return f"{sql}"
 
 
-def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_kv=None,
-                    data_obj=None):  # assumption data_dir = /etc/dataos/work/data/tableOrViewName
+def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_kv: dict = None,
+                    data_obj=None,
+                    excludes_dimension: list = None):  # assumption data_dir = /etc/dataos/work/data/tableOrViewName
 
     # Models
     model_path = os.path.join(os.getcwd(), "models")
@@ -96,10 +98,15 @@ def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_k
 
     # source files
     t_v_path = os.path.join(source_path, f"{data_obj['name']}_source.yaml")
+    refresh = {}
+    if "refresh" in additional_kv.keys():
+        refresh.update(additional_kv['refresh'])
+        del additional_kv['refresh']
     with open(t_v_path, 'w') as file:
         source = {
             "connector": "local_file",
             "path": f"/etc/dataos/work/data/{data_obj['name']}/*.parquet",
+            "refresh": refresh,
             "lens": {
                 "baseUri": get_env_or_throw(LENS2_BASE_URL),
                 "name": lens_name,
@@ -119,14 +126,15 @@ def dump_board_yaml(lens_name=None, measures=None, dimensions=None, additional_k
 
     # dashboards yaml
     dashboard_data = {
-        "title": data_obj['title'],
+        "title": f"{lens_name}/{data_obj['title']}",
         "model": f"{data_obj['name']}_model",
     }
+
     if additional_kv:
         dashboard_data.update(additional_kv)
     dashboard_data.update(
         {
-            "dimensions": dimensions,
+            "dimensions": [d for d in dimensions if d["name"] not in excludes_dimension],
             "measures": measures
         }
     )
