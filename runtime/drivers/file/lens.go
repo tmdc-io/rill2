@@ -145,6 +145,7 @@ func (c *connection) getDataFromLens2(conf *ApiSourceProperties, query Query) (*
 	var response ApiResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		c.logger.Error(fmt.Sprintf("Json Unmarshalling failed for ResponseBody to ApiResponse: %s", err.Error()))
+		c.logger.Debug(fmt.Sprintf("Response from LENS API: %s", string(body)))
 		return nil, err
 	}
 
@@ -273,7 +274,7 @@ func (c *connection) getSchema(response *ApiResponse) (string, error) {
 }
 
 func (c *connection) writeDataToParquet(conf *ApiSourceProperties, limit, offset int, query Query, dirPath string) (bool, error) {
-	if offset != 0 && offset == limit*(conf.Lens.Body.End+1) {
+	if offset != 0 && offset == limit*(conf.Lens.Body.End+1)+conf.Lens.Body.Start && conf.Lens.Body.End != -1 {
 		return true, nil
 	}
 	var fileName string
@@ -317,7 +318,7 @@ func (c *connection) writeDataToParquet(conf *ApiSourceProperties, limit, offset
 				if memberValue != nil {
 					switch valueType := getParquetDatatype(response.Annotation.Dimensions[field].Type); valueType {
 					case "BYTE_ARRAY":
-						recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], memberValue.(string))
+						recordField = fmt.Sprintf("\"%s\":\"%s\"", strings.Split(field, ".")[1], escapeSpecialChars(memberValue.(string)))
 					case "TIMESTAMP_MICROS":
 						layout := "2006-01-02T15:04:05.000"
 						timestamp, err := time.Parse(layout, memberValue.(string))
@@ -349,6 +350,7 @@ func (c *connection) writeDataToParquet(conf *ApiSourceProperties, limit, offset
 		}
 
 		c.logger.Debug("Parquet Batch Write Finished")
+
 		// Ensure all buffered data is flushed to disk
 		if err := pw.WriteStop(); err != nil {
 			c.logger.Error(fmt.Sprintf("Error closing Parquet Json file writer: %s", err.Error()))
@@ -390,4 +392,15 @@ func (c *connection) writeIfDataExists(conf *ApiSourceProperties, query Query) (
 	count := len(response.Data.Dataset)
 	c.logger.Debug(fmt.Sprintf("Data Row Count from Response: %d", count))
 	return count, response, nil
+}
+
+func escapeSpecialChars(input string) string {
+	replacer := strings.NewReplacer(
+		`"`, `\"`,
+		`\`, `\\`,
+		`\n`, `\n`,
+		`\t`, `\t`,
+		`\r`, `\r`,
+	)
+	return replacer.Replace(input)
 }
