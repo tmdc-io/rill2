@@ -1,4 +1,4 @@
-VERSION = 0.42.3-19
+VERSION = 0.42.3-20
 
 .PHONY: cli
 cli: cli.prepare
