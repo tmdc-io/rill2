@@ -60,5 +60,5 @@ docker-run:
         -e BASE_PATH=lens2/iris/public:sales400 \
 		-e LENS2_BASE_URL=https://great-mammoth.dataos.app/lens2/api \
         -e HEIMDALL_URL=https://great-mammoth.dataos.app/heimdall \
-        -e DATAOS_RUN_AS_APIKEY=dG9rZW5fbm90aWNlYWJseV9pbml0aWFsbHlfdG9wc19uZXd0LmJiYWRjNjcxLWJkZTAtNGRiYi1iZmQ1LWYwNDQxOGFmNDQ4Zg== \
+        -e DATAOS_RUN_AS_APIKEY=apikey \
         rubiklabs/lens2-iris:${VERSION} iris start --verbose=true
