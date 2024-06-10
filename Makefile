@@ -56,9 +56,9 @@ docker-build:
 .PHONY: docker-run
 docker-run:
 	docker run --rm -it -p 9009:9009 \
-        -e LENS2_NAME=public:sales360 \
-        -e BASE_PATH=lens2/iris/public:sales360 \
-		-e LENS2_BASE_URL=https://emerging-hawk.dataos.app/lens2/api \
-        -e HEIMDALL_URL=https://emerging-hawk.dataos.app/heimdall \
-        -e DATAOS_RUN_AS_APIKEY=cmFrZXNoX3Rlc3RpbmcuOWYzNGFiYzktMmFlMi00ZWRlLTk0MjYtOTUyMDNhZDkxOGQy \
-        rubiklabs/lens2-iris:${VERSION} iris start
+        -e LENS2_NAME=public:sales400 \
+        -e BASE_PATH=lens2/iris/public:sales400 \
+		-e LENS2_BASE_URL=https://great-mammoth.dataos.app/lens2/api \
+        -e HEIMDALL_URL=https://great-mammoth.dataos.app/heimdall \
+        -e DATAOS_RUN_AS_APIKEY=dG9rZW5fbm90aWNlYWJseV9pbml0aWFsbHlfdG9wc19uZXd0LmJiYWRjNjcxLWJkZTAtNGRiYi1iZmQ1LWYwNDQxOGFmNDQ4Zg== \
+        rubiklabs/lens2-iris:${VERSION} iris start --verbose=true
