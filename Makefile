@@ -1,4 +1,4 @@
-VERSION = 0.42.3-21
+VERSION = 0.42.3-22
 
 .PHONY: cli
 cli: cli.prepare
@@ -56,9 +56,9 @@ docker-build:
 .PHONY: docker-run
 docker-run:
 	docker run --rm -it -p 9009:9009 \
-        -e LENS2_NAME=public:sales400 \
-        -e BASE_PATH=lens2/iris/public:sales400 \
-		-e LENS2_BASE_URL=https://great-mammoth.dataos.app/lens2/api \
-        -e HEIMDALL_URL=https://great-mammoth.dataos.app/heimdall \
+        -e LENS2_NAME=public:trino \
+        -e BASE_PATH=lens2/iris/public:trino \
+		-e LENS2_BASE_URL=https://liberal-donkey.dataos.app/lens2/api \
+        -e HEIMDALL_URL=https://liberal-donkey.dataos.app/heimdall \
         -e DATAOS_RUN_AS_APIKEY=apikey \
         rubiklabs/lens2-iris:${VERSION} iris start --verbose=true
