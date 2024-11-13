@@ -1,4 +1,4 @@
-VERSION = 0.42.3-22
+VERSION = 0.42.3-24
 
 .PHONY: cli
 cli: cli.prepare
@@ -50,8 +50,7 @@ proto.generate:
 
 .PHONY: docker-build
 docker-build:
-	docker build --progress plain -t rubiklabs/lens2-iris:${VERSION} -f lens2/Dockerfile .
-	docker push rubiklabs/lens2-iris:${VERSION}
+	docker buildx build --sbom=true --provenance=true --progress=plain --no-cache -t rubiklabs/lens2-iris:${VERSION} -f lens2/Dockerfile . --push
 
 .PHONY: docker-run
 docker-run:
