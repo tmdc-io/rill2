@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rilldata/rill/cli/pkg/gitutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/rilldata/rill/cli/pkg/gitutil"
 
 	"github.com/fatih/color"
 	"github.com/hashicorp/go-version"
