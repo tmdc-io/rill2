@@ -1,6 +1,10 @@
 <script lang="ts">
+    import { user, login, logout } from '../../lib/oidc/authStore.ts';
+    import { Button } from "@rilldata/web-common/components/button";
     const browserURL = new URL(window.location.href);
     const url = browserURL.origin+"/home";
+
+    
 </script>
 <style>
     .default-text {
@@ -12,3 +16,9 @@
 <div class="default-text">
     Hello stranger! We could not find your JWT Token (<a href="https://en.wikipedia.org/wiki/JSON_Web_Token" target="_blank">Learn more</a>) Please click here to <a href={url} target="_blank">Go Home</a> and login. It will automatically generate your token. Come back, and refresh this page.
 </div>
+<Button
+    type="primary"
+    on:click={login}
+  >
+    Login Again
+  </Button>
