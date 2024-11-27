@@ -50,7 +50,7 @@ proto.generate:
 
 .PHONY: docker-build
 docker-build:
-	docker buildx build --sbom=true --provenance=true --progress=plain --no-cache -t rubiklabs/lens2-iris:${VERSION} -f lens2/Dockerfile . --push
+	docker buildx build --platform=linux/amd64 --sbom=true --provenance=true --progress=plain --no-cache -t rubiklabs/lens2-iris:${VERSION} -f lens2/Dockerfile . --push
 
 .PHONY: docker-run
 docker-run:

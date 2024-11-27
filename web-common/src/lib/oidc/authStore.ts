@@ -3,16 +3,16 @@ import { UserManager, UserManagerSettings, User } from 'oidc-client-ts';
 
 // Define OIDC Configuration
 const oidcConfig: UserManagerSettings = {
-  authority: import.meta.env.VITE_OIDC_AUTHORITY,
-  client_id: import.meta.env.VITE_OIDC_CLIENT_ID,
-  redirect_uri: import.meta.env.VITE_OIDC_REDIRECT_URI,
-  post_logout_redirect_uri: import.meta.env.VITE_OIDC_POST_LOGOUT_REDIRECT_URI,
-  response_type: import.meta.env.VITE_OIDC_RESPONSE_TYPE || 'code',
-  scope: import.meta.env.VITE_OIDC_SCOPE || 'openid profile email',
-  client_secret: import.meta.env.VITE_OIDC_CLIENT_SECRET,
-  loadUserInfo: import.meta.env.VITE_OIDC_LOADUSERINFO === 'true',
-  automaticSilentRenew: import.meta.env.VITE_OIDC_AUTOMATIC_SILENT_RENEW === 'true',
-  silent_redirect_uri: import.meta.env.VITE_OIDC_SILENT_REDIRECT_URI
+  authority: process.env.VITE_OIDC_AUTHORITY || "",
+  client_id: process.env.VITE_OIDC_CLIENT_ID || "",
+  redirect_uri: process.env.VITE_OIDC_REDIRECT_URI || "",
+  post_logout_redirect_uri: process.env.VITE_OIDC_POST_LOGOUT_REDIRECT_URI,
+  response_type: process.env.VITE_OIDC_RESPONSE_TYPE || 'code',
+  scope: process.env.VITE_OIDC_SCOPE || 'openid profile email',
+  client_secret: process.env.VITE_OIDC_CLIENT_SECRET,
+  loadUserInfo: process.env.VITE_OIDC_LOADUSERINFO === 'true',
+  automaticSilentRenew: process.env.VITE_OIDC_AUTOMATIC_SILENT_RENEW === 'true',
+  silent_redirect_uri: process.env.VITE_OIDC_SILENT_REDIRECT_URI
 };
 
 console.log('OIDC Config:', oidcConfig);
