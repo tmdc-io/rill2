@@ -1,5 +1,9 @@
 export function fetchTokenFromLocalStorage() {
-    const storeValue = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")) : {};
-    const token = storeValue?.accessToken;
-    return token;
+  let token;
+  const keys = Object.keys(localStorage).filter(key => key.startsWith("modern-oidc"));
+  if(keys?.length>0){
+    const storeValue = localStorage.getItem(keys[0]) ? JSON.parse(localStorage.getItem(keys[0])) : {};
+    token = storeValue?.access_token;
   }
+  return token;
+}
